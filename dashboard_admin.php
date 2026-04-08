@@ -2,7 +2,6 @@
 session_start();
 require 'koneksi.php';
 
-// Cek akses Admin
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
     header("Location: login.php");
     exit;
@@ -10,20 +9,16 @@ if(!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
 
 $nama_admin = $_SESSION['nama'] ?? 'Administrator';
 
-// 1. MENGHITUNG TOTAL USER DARI DATABASE
 $query_users = mysqli_query($conn, "SELECT COUNT(*) as total FROM users");
 $row_users = mysqli_fetch_assoc($query_users);
 $total_users = $row_users['total'];
 
-// 2. MENGHITUNG TOTAL PROPERTI DARI DATABASE
 $query_properti = mysqli_query($conn, "SELECT COUNT(*) as total FROM properti");
 $row_properti = mysqli_fetch_assoc($query_properti);
 $total_properti = $row_properti['total'];
 
-// 3. MENGHITUNG TRANSAKSI (Karena di gambarmu belum ada tabel transaksi, kita set 0 dulu)
 $total_transaksi = 0; 
 
-// 4. MENGAMBIL 5 DATA USER TERBARU
 $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC LIMIT 5");
 ?>
 
