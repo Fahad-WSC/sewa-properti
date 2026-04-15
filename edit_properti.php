@@ -27,6 +27,9 @@ if(isset($_POST['update'])) {
     $kamar_mandi = $_POST['kamar_mandi'];
     $harga = $_POST['harga'];
     $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
+    
+    $alamat = mysqli_real_escape_string($conn, $_POST['alamat']);
+    $status = $_POST['status'];
 
     $query_update = "UPDATE properti SET 
                     nama_properti = '$nama', 
@@ -34,7 +37,9 @@ if(isset($_POST['update'])) {
                     kamar = '$kamar', 
                     kamar_mandi = '$kamar_mandi', 
                     harga = '$harga', 
-                    deskripsi = '$deskripsi' 
+                    deskripsi = '$deskripsi',
+                    alamat = '$alamat',
+                    status = '$status'
                     WHERE id = '$id_properti' AND owner_id = '$owner_id'";
 
     if(mysqli_query($conn, $query_update)) {
@@ -50,87 +55,87 @@ if(isset($_POST['update'])) {
     <meta charset="UTF-8">
     <title>Edit Properti - Sewa Properti</title>
     <style>
-       body { 
-    font-family: Arial, sans-serif; 
-    background-color: #f4f4f4; 
-    margin: 0; 
-    padding: 40px; 
-}
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f4f4f4; 
+            margin: 0; 
+            padding: 40px; 
+        }
 
-.form-container { 
-    background: white; 
-    padding: 30px; 
-    border-radius: 8px; 
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1); 
-    max-width: 600px; 
-    margin: 0 auto; 
-}
+        .form-container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1); 
+            max-width: 600px; 
+            margin: 0 auto; 
+        }
 
-h2 { 
-    margin-top: 0; 
-    color: #ffc107; 
-} 
+        h2 { 
+            margin-top: 0; 
+            color: #ffc107; 
+        } 
 
-.form-group { 
-    margin-bottom: 15px; 
-}
+        .form-group { 
+            margin-bottom: 15px; 
+        }
 
-.form-group label { 
-    display: block; 
-    font-weight: bold; 
-    margin-bottom: 5px; 
-    color: #333; 
-}
+        .form-group label { 
+            display: block; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            color: #333; 
+        }
 
-.form-group input, 
-.form-group select, 
-.form-group textarea { 
-    width: 100%; 
-    padding: 10px; 
-    border: 1px solid #ccc; 
-    border-radius: 4px; 
-    box-sizing: border-box; 
-}
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+        }
 
-.btn-simpan { 
-    background: #ffc107; 
-    color: #333; 
-    border: none; 
-    padding: 12px 20px; 
-    font-weight: bold; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    width: 100%; 
-    font-size: 16px;
-}
+        .btn-simpan { 
+            background: #ffc107; 
+            color: #333; 
+            border: none; 
+            padding: 12px 20px; 
+            font-weight: bold; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 16px;
+        }
 
-.btn-simpan:hover { 
-    background: #e0a800; 
-}
+        .btn-simpan:hover { 
+            background: #e0a800; 
+        }
 
-.btn-kembali { 
-    display: inline-block; 
-    margin-bottom: 20px; 
-    color: #555; 
-    text-decoration: none; 
-    font-weight: bold; 
-}
+        .btn-kembali { 
+            display: inline-block; 
+            margin-bottom: 20px; 
+            color: #555; 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
 
-.btn-kembali:hover { 
-    text-decoration: underline; 
-}
+        .btn-kembali:hover { 
+            text-decoration: underline; 
+        }
     </style>
 </head>
 <body>
 
     <div class="form-container">
-        <a href="dashboard_owner.php" class="btn-kembali">← Batal & Kembali</a>
+        <a href="dashboard_owner.php" class="btn-kembali">&larr; Batal & Kembali</a>
         <h2>Edit Data Properti</h2>
         
         <form action="" method="POST">
             <div class="form-group">
                 <label>Nama Properti</label>
-                <input type="text" name="nama_properti" value="<?php echo $properti['nama_properti']; ?>" required>
+                <input type="text" name="nama_properti" value="<?php echo htmlspecialchars($properti['nama_properti']); ?>" required>
             </div>
             
             <div class="form-group">
@@ -144,7 +149,7 @@ h2 {
             
             <div class="form-group">
                 <label>Jumlah Kamar Tidur</label>
-                <input type="number" name="kamar" value="<?php echo $properti['kamar']; ?>" required min="1">
+                <input type="number" name="kamar" value="<?php echo htmlspecialchars($properti['kamar']); ?>" required min="1">
             </div>
             
             <div class="form-group">
@@ -157,12 +162,26 @@ h2 {
             
             <div class="form-group">
                 <label>Harga Sewa</label>
-                <input type="number" name="harga" value="<?php echo $properti['harga']; ?>" required min="100000">
+                <input type="number" name="harga" value="<?php echo htmlspecialchars($properti['harga']); ?>" required min="100000">
+            </div>
+
+            <div class="form-group">
+                <label>Alamat Lengkap</label>
+                <textarea name="alamat" rows="3" required><?php echo isset($properti['alamat']) ? htmlspecialchars($properti['alamat']) : ''; ?></textarea>
             </div>
             
             <div class="form-group">
                 <label>Deskripsi Properti</label>
-                <textarea name="deskripsi" rows="4" required><?php echo $properti['deskripsi']; ?></textarea>
+                <textarea name="deskripsi" rows="4" required><?php echo htmlspecialchars($properti['deskripsi']); ?></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Status Properti</label>
+                <select name="status" required>
+                    <?php $status_saat_ini = isset($properti['status']) ? $properti['status'] : 'TERSEDIA'; ?>
+                    <option value="TERSEDIA" <?php if($status_saat_ini == 'TERSEDIA') echo 'selected'; ?>>Tersedia</option>
+                    <option value="TIDAK TERSEDIA" <?php if($status_saat_ini == 'TIDAK TERSEDIA') echo 'selected'; ?>>Tidak Tersedia</option>
+                </select>
             </div>
             
             <button type="submit" name="update" class="btn-simpan">Update Properti</button>

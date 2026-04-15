@@ -2,7 +2,6 @@
 session_start();
 require 'koneksi.php';
 
-// Proteksi Halaman
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
     header("Location: login.php");
     exit;
@@ -187,9 +186,13 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
         tr:hover { background-color: #fafbfc; }
 
         .badge { padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; }
+        
         .status-waiting { background: #fff9e6; color: #f39c12; }
         .status-approved { background: #eef9f1; color: #27ae60; }
         .status-rejected { background: #fdf2f2; color: #e74c3c; }
+
+        .prop-tersedia { background: #eef9f1; color: #27ae60; }
+        .prop-tidak { background: #fdf2f2; color: #e74c3c; }
 
         .action-links a { 
             text-decoration: none; 
@@ -226,10 +229,10 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
 
     <div class="main-wrapper">
         <header class="topbar">
-            <div class="user-info">Halo, <?php echo $nama_owner; ?>!</div>
+            <div class="user-info">Halo, <?php echo htmlspecialchars($nama_owner); ?>!</div>
             <div>
                 <span style="background: var(--primary-red); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);">
-                    <?php echo substr($nama_owner, 0, 1); ?>
+                    <?php echo substr(htmlspecialchars($nama_owner), 0, 1); ?>
                 </span>
             </div>
         </header>
@@ -256,7 +259,7 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
             </div>
 
             <div class="table-container" style="border-top: 4px solid #f39c12;">
-                <div class="table-header-title">🔔 Pesanan Masuk Terbaru</div>
+                <div class="table-header-title">Pesanan Masuk Terbaru</div>
                 <table>
                     <thead>
                         <tr>
@@ -285,8 +288,8 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                                 $status_class = ($row_m['status'] == 'Menunggu Konfirmasi') ? 'status-waiting' : 
                                                 (($row_m['status'] == 'Disetujui') ? 'status-approved' : 'status-rejected');
                                 echo "<tr>
-                                        <td><strong>{$row_m['nama_penyewa']}</strong></td>
-                                        <td>{$row_m['nama_properti']}</td>
+                                        <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
+                                        <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
                                         <td>{$tgl}</td>
                                         <td><span class='badge {$status_class}'>{$row_m['status']}</span></td>
                                         <td class='action-links' style='text-align: center;'>";
@@ -306,31 +309,42 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
             </div>
 
             <div class="table-container">
-                <div class="table-header-title"> Kelola Daftar Properti</div>
+                <div class="table-header-title">Kelola Daftar Properti</div>
                 <table>
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Properti</th>
+                            <th>Properti & Lokasi</th>
                             <th>Tipe</th>
                             <th>Harga Sewa</th>
+                            <th>Status</th>
                             <th style="text-align: center;">Opsi Pengaturan</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php 
                         if(mysqli_num_rows($result) == 0) {
-                            echo "<tr><td colspan='5' class='kosong'>Kamu belum memiliki properti. Yuk mulai tambah!</td></tr>";
+                            echo "<tr><td colspan='6' class='kosong'>Kamu belum memiliki properti. Yuk mulai tambah!</td></tr>";
                         } else {
                             $no = 1;
                             mysqli_data_seek($result, 0); 
                             while($row = mysqli_fetch_assoc($result)) {
                                 $harga_rp = "Rp " . number_format($row['harga'], 0, ',', '.');
+                                
+                                $status_properti = isset($row['status']) ? $row['status'] : 'TERSEDIA';
+                                $badge_prop = ($status_properti == 'TERSEDIA') ? 'prop-tersedia' : 'prop-tidak';
+
+                                $alamat_singkat = !empty($row['alamat']) ? htmlspecialchars(substr($row['alamat'], 0, 35)) . '...' : 'Alamat belum diisi';
+
                                 echo "<tr>
                                         <td width='50'>{$no}</td>
-                                        <td><strong>{$row['nama_properti']}</strong></td>
+                                        <td>
+                                            <strong>" . htmlspecialchars($row['nama_properti']) . "</strong><br>
+                                            <span style='font-size: 11px; color: #7f8c8d;'> {$alamat_singkat}</span>
+                                        </td>
                                         <td>" . ucfirst($row['tipe']) . "</td>
                                         <td style='color: #27ae60; font-weight: 700;'>{$harga_rp}</td>
+                                        <td><span class='badge {$badge_prop}'>{$status_properti}</span></td>
                                         <td class='action-links' style='text-align: center;'>
                                             <a href='edit_properti.php?id={$row['id']}' class='btn-edit'>Edit</a>
                                             <a href='hapus_properti.php?id={$row['id']}' class='btn-hapus' onclick=\"return confirm('Hapus properti ini?');\">Hapus</a>

@@ -2,16 +2,21 @@
 session_start();
 require 'koneksi.php';
 
-if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
+if(!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
     header("Location: login.php");
     exit;
 }
 
-$owner_id = $_SESSION['user_id'];
-$nama_owner = $_SESSION['nama'] ?? 'Owner';
+$query = "SELECT p.*, pr.nama_properti, pr.harga 
+          FROM pesanan p 
+          JOIN properti pr ON p.properti_id = pr.id 
+          ORDER BY p.tanggal_pesan DESC";
 
-$query = "SELECT * FROM properti WHERE owner_id = '$owner_id' ORDER BY id DESC";
-$result = mysqli_query($conn, $query);
+try {
+    $result = mysqli_query($conn, $query); 
+} catch (mysqli_sql_exception $e) {
+    $result = false; 
+}
 ?>
 
 <!DOCTYPE html>
@@ -19,34 +24,37 @@ $result = mysqli_query($conn, $query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Properti Saya - Owner</title>
+    <title>Laporan Transaksi - Admin</title>
     <style>
-        :root { 
-            --primary-red: #e74c3c; 
-            --dark-red: #c0392b; 
-            --sidebar-bg: #2c3e50; 
+    :root {
+            --primary-red: #e74c3c;
+            --dark-red: #c0392b;
+            --sidebar-bg: #2c3e50;
+            --light-bg: #f4f7f6;
+            --text-dark: #2c3e50;
         }
 
         * { 
             margin: 0; 
             padding: 0; 
             box-sizing: border-box; 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
         }
 
         body { 
-            background-color: #f4f7f6; 
+            background-color: var(--light-bg); 
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
         }
-        
+
         .sidebar { 
             width: 260px; 
             background-color: var(--sidebar-bg); 
             color: white; 
             display: flex; 
             flex-direction: column; 
+            transition: all 0.3s;
         }
 
         .sidebar-header { 
@@ -57,8 +65,9 @@ $result = mysqli_query($conn, $query);
             font-size: 18px; 
             font-weight: 800; 
             background-color: #1a252f; 
-            color: var(--primary-red); 
             letter-spacing: 2px; 
+            color: var(--primary-red);
+            border-bottom: 1px solid #34495e;
         }
 
         .sidebar-menu { 
@@ -67,25 +76,32 @@ $result = mysqli_query($conn, $query);
         }
 
         .sidebar-menu a { 
-            display: block; 
+            display: flex;
+            align-items: center;
             padding: 15px 25px; 
             color: #bdc3c7; 
             text-decoration: none; 
             transition: 0.2s; 
-            font-size: 14px; 
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .sidebar-menu a:hover, 
         .sidebar-menu a.active { 
             background-color: #34495e; 
-            color: var(--primary-red); 
-            border-left: 5px solid var(--primary-red); 
+            color: var(--primary-red);
+            border-left: 5px solid var(--primary-red);
         }
 
         .sidebar-menu .logout { 
             margin-top: 30px; 
             border-top: 1px solid #34495e; 
             color: #e74c3c; 
+        }
+
+        .sidebar-menu .logout:hover { 
+            background-color: var(--primary-red); 
+            color: white; 
         }
         
         .main-wrapper { 
@@ -100,9 +116,11 @@ $result = mysqli_query($conn, $query);
             background-color: white; 
             display: flex; 
             align-items: center; 
-            justify-content: space-between; 
             padding: 0 40px; 
             box-shadow: 0 2px 15px rgba(0,0,0,0.05); 
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
         }
 
         .content { 
@@ -122,8 +140,25 @@ $result = mysqli_query($conn, $query);
             padding: 20px 30px; 
             border-bottom: 1px solid #f1f2f6; 
             font-weight: 700; 
-            color: #2c3e50; 
+            color: #333; 
             font-size: 18px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-cetak {
+            padding: 10px 20px; 
+            background: var(--primary-red); 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-cetak:hover {
+            background: var(--dark-red);
         }
 
         table { 
@@ -133,7 +168,7 @@ $result = mysqli_query($conn, $query);
 
         th { 
             background-color: #fcfdfe; 
-            color: #95a5a6; 
+            color: #777; 
             padding: 18px 30px; 
             text-transform: uppercase; 
             font-size: 12px; 
@@ -144,35 +179,7 @@ $result = mysqli_query($conn, $query);
             padding: 18px 30px; 
             border-bottom: 1px solid #f1f2f6; 
             font-size: 14px; 
-        }
-        
-        .btn-tambah { 
-            background: var(--primary-red); 
-            color: white; 
-            padding: 10px 20px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            font-size: 14px; 
-        }
-
-        .action-links a { 
-            text-decoration: none; 
-            padding: 8px 15px; 
-            border-radius: 6px; 
-            font-size: 12px; 
-            font-weight: 700; 
-            color: white; 
-            margin-right: 5px; 
-        }
-
-        .btn-edit { 
-            background: #f1c40f; 
-            color: #333 !important; 
-        }
-
-        .btn-hapus { 
-            background: #e74c3c; 
+            color: #444;
         }
         
         .badge { 
@@ -182,82 +189,73 @@ $result = mysqli_query($conn, $query);
             font-size: 11px; 
         }
 
-        .prop-tersedia { 
-            background: #eef9f1; 
-            color: #27ae60; 
-        }
+        .status-berhasil { background: #eef9f1; color: #27ae60; }
+        .status-pending { background: #fff8e1; color: #f39c12; }
+        .status-batal { background: #fdf2f2; color: #e74c3c; }
 
-        .prop-tidak { 
-            background: #fdf2f2; 
-            color: #e74c3c; 
-        }
-        
         .kosong { 
             text-align: center; 
             padding: 50px; 
-            color: #bdc3c7; 
+            color: #888; 
             font-style: italic; 
         }
     </style>
 </head>
 <body>
     <aside class="sidebar">
-        <div class="sidebar-header">PANEL OWNER</div>
+        <div class="sidebar-header">PANEL ADMIN</div>
         <div class="sidebar-menu">
-            <a href="dashboard_owner.php">Dashboard</a>
-            <a href="properti_saya.php" class="active">Properti Saya</a>
-            <a href="laporan_sewa.php">Laporan Sewa</a>
-            <a href="pengaturan_owner.php">Pengaturan</a>
+            <a href="dashboard_admin.php">Dashboard</a>
+            <a href="kelola_user.php">Kelola Pengguna</a>
+            <a href="kelola_properti.php">Data Properti</a>
+            <a href="laporan_transaksi.php" class="active">Laporan Transaksi</a>
+            <a href="pengaturan_admin.php">Pengaturan</a>
             <a href="logout.php" class="logout">Logout</a>
         </div>
     </aside>
 
     <div class="main-wrapper">
         <header class="topbar">
-            <div style="font-weight:bold">Manajemen Properti</div>
-            <a href="tambah_properti.php" class="btn-tambah">+ Properti Baru</a>
+            Laporan Transaksi Keseluruhan
         </header>
         <main class="content">
             <div class="table-container">
-                <div class="table-header-title">Daftar Semua Properti</div>
+                <div class="table-header-title">
+                    <span>Semua Riwayat Transaksi Sewa</span>
+                    <button class="btn-cetak" onclick="window.print()">Cetak Laporan</button>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Properti & Lokasi</th>
-                            <th>Tipe</th>
-                            <th>Harga</th>
+                            <th>Tanggal</th>
+                            <th>Properti</th>
+                            <th>Penyewa</th>
+                            <th>Total Nominal</th>
                             <th>Status</th>
-                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php 
-                        if(mysqli_num_rows($result) == 0): 
+                        if(!$result || mysqli_num_rows($result) == 0): 
                         ?>
-                            <tr><td colspan="6" class="kosong">Kamu belum memiliki properti. Yuk mulai tambah!</td></tr>
+                            <tr><td colspan="6" class="kosong">Belum ada data transaksi di sistem.</td></tr>
                         <?php 
                         else:
                             $no=1; 
                             while($row = mysqli_fetch_assoc($result)): 
-                                $status_properti = isset($row['status']) ? $row['status'] : 'TERSEDIA';
-                                $badge_prop = ($status_properti == 'TERSEDIA') ? 'prop-tersedia' : 'prop-tidak';
-
-                                $alamat_singkat = !empty($row['alamat']) ? htmlspecialchars(substr($row['alamat'], 0, 40)) . '...' : 'Alamat belum diisi';
+                                $status = $row['status'] ?? 'pending';
+                                $badge_class = 'status-pending';
+                                if(strtolower($status) == 'berhasil' || strtolower($status) == 'lunas') $badge_class = 'status-berhasil';
+                                if(strtolower($status) == 'batal') $badge_class = 'status-batal';
                         ?>
                         <tr>
                             <td><?= $no++; ?></td>
-                            <td>
-                                <strong><?= htmlspecialchars($row['nama_properti']); ?></strong><br>
-                                <span style='font-size: 11px; color: #7f8c8d;'> <?= $alamat_singkat; ?></span>
-                            </td>
-                            <td><?= ucfirst($row['tipe']); ?></td>
-                            <td style="color:#27ae60; font-weight:bold">Rp <?= number_format($row['harga'],0,',','.'); ?></td>
-                            <td><span class="badge <?= $badge_prop; ?>"><?= $status_properti; ?></span></td>
-                            <td class="action-links">
-                                <a href="edit_properti.php?id=<?= $row['id']; ?>" class="btn-edit">Edit</a>
-                                <a href="hapus_properti.php?id=<?= $row['id']; ?>" class="btn-hapus" onclick="return confirm('Yakin ingin menghapus properti ini?')">Hapus</a>
-                            </td>
+                            <td><?= date('d M Y', strtotime($row['tanggal_pesan'])); ?></td>
+                            <td><strong><?= htmlspecialchars($row['nama_properti']); ?></strong></td>
+                            <td><?= htmlspecialchars($row['nama_penyewa'] ?? 'Tenant'); ?></td>
+                            <td style="color:#d11212; font-weight:bold">Rp <?= number_format($row['total_harga'] ?? $row['harga'],0,',','.'); ?></td>
+                            <td><span class="badge <?= $badge_class; ?>"><?= strtoupper($status); ?></span></td>
                         </tr>
                         <?php 
                             endwhile; 
