@@ -198,17 +198,20 @@ $query = mysqli_query($conn, "SELECT properti.*, users.nama as nama_owner
         }
     </style>
 </head>
-<body>
+    <?php
+    $current_page = basename($_SERVER['PHP_SELF']);
+    ?>
+
     <aside class="sidebar">
-        <div class="sidebar-header">PANEL ADMIN</div>
-        <div class="sidebar-menu">
-            <a href="dashboard_admin.php" class="active">Dashboard</a>
-            <a href="kelola_user.php">Kelola Pengguna</a>
-            <a href="kelola_properti.php">Data Properti</a>
-            <a href="laporan_transaksi.php">Laporan Transaksi</a>
-            <a href="pengaturan_admin.php">Pengaturan</a>
-            <a href="logout.php" class="logout">Logout</a>
-        </div>
+    <div class="sidebar-header">PANEL ADMIN</div>
+    <div class="sidebar-menu">
+        <a href="dashboard_admin.php" class="<?= ($current_page == 'dashboard_admin.php') ? 'active' : ''; ?>">Dashboard</a>
+        <a href="kelola_user.php" class="<?= ($current_page == 'kelola_user.php') ? 'active' : ''; ?>">Kelola Pengguna</a>
+        <a href="kelola_properti.php" class="<?= ($current_page == 'kelola_properti.php') ? 'active' : ''; ?>">Data Properti</a>
+        <a href="laporan_transaksi.php" class="<?= ($current_page == 'laporan_transaksi.php') ? 'active' : ''; ?>">Laporan Transaksi</a>
+        <a href="pengaturan_admin.php" class="<?= ($current_page == 'pengaturan_admin.php') ? 'active' : ''; ?>">Pengaturan</a>
+        <a href="logout.php" class="logout">Logout</a>
+    </div>
     </aside>
 
     <div class="main-wrapper">

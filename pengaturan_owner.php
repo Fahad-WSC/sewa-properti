@@ -20,45 +20,71 @@ $val_user = isset($user['username']) ? $user['username'] : '';
     <meta charset="UTF-8">
     <title>Pengaturan Akun - Owner</title>
     <style>
-        :root { --red: #e74c3c; --dark: #2c3e50; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-
-        body { 
-            display: flex; 
-            height: 100vh; 
-            background: #f4f7f6; 
+        :root {
+            --primary-red: #e74c3c;
+            --dark-red: #c0392b;
+            --sidebar-bg: #2c3e50;
+            --light-bg: #f4f7f6;
+            --text-dark: #2c3e50;
         }
 
-        .sidebar { 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+
+        body { 
+            background-color: var(--light-bg); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+       .sidebar { 
             width: 260px; 
-            background: var(--dark); 
+            background-color: var(--sidebar-bg); 
             color: white; 
             display: flex; 
             flex-direction: column; 
-            flex-shrink: 0; 
+            transition: all 0.3s;
         }
+
         .sidebar-header { 
             height: 70px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-weight: bold; 
-            color: var(--red); 
-            background: #1a252f; 
+            font-size: 18px; 
+            font-weight: 800; 
+            background-color: #1a252f; 
+            letter-spacing: 2px; 
+            color: var(--primary-red);
+            border-bottom: 1px solid #34495e;
         }
+
+        .sidebar-menu { flex: 1; padding: 20px 0; }
+
         .sidebar-menu a { 
-            display: block; 
+            display: flex;
+            align-items: center;
             padding: 15px 25px; 
             color: #bdc3c7; 
             text-decoration: none; 
-        }
-        .sidebar-menu a.active { 
-            background: #34495e; 
-            color: var(--red); 
-            border-left: 5px solid var(--red); 
+            transition: 0.2s; 
+            font-size: 14px;
+            font-weight: 500;
         }
 
-        /* AREA KANAN */
+        .sidebar-menu a:hover, 
+        .sidebar-menu a.active { 
+            background-color: #34495e; 
+            color: var(--primary-red);
+            border-left: 5px solid var(--primary-red);
+        }
+
+        .sidebar-menu .logout { 
+            margin-top: 30px; 
+            border-top: 1px solid #34495e; 
+            color: #e74c3c; 
+        }
+
         .main-content { 
             flex: 1; 
             display: flex; 

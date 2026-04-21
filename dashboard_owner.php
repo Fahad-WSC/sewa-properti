@@ -34,7 +34,6 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Owner Dashboard | Sewa Properti</title>
     <style>
-
         :root {
             --primary-red: #e74c3c;
             --dark-red: #c0392b;
@@ -43,175 +42,303 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
             --text-dark: #2c3e50;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-
-        body { 
-            background-color: var(--light-bg); 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
 
-        .sidebar { 
-            width: 260px; 
-            background-color: var(--sidebar-bg); 
-            color: white; 
-            display: flex; 
-            flex-direction: column; 
+        body {
+            background-color: var(--light-bg);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
             transition: all 0.3s;
         }
 
-        .sidebar-header { 
-            height: 70px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 18px; 
-            font-weight: 800; 
-            background-color: #1a252f; 
-            letter-spacing: 2px; 
+        .sidebar-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            background-color: #1a252f;
+            letter-spacing: 2px;
             color: var(--primary-red);
             border-bottom: 1px solid #34495e;
         }
 
-        .sidebar-menu { flex: 1; padding: 20px 0; }
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
 
-        .sidebar-menu a { 
+        .sidebar-menu a {
             display: flex;
             align-items: center;
-            padding: 15px 25px; 
-            color: #bdc3c7; 
-            text-decoration: none; 
-            transition: 0.2s; 
+            padding: 15px 25px;
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: 0.2s;
             font-size: 14px;
             font-weight: 500;
         }
 
-        .sidebar-menu a:hover, 
-        .sidebar-menu a.active { 
-            background-color: #34495e; 
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: #34495e;
             color: var(--primary-red);
             border-left: 5px solid var(--primary-red);
         }
 
-        .sidebar-menu .logout { 
-            margin-top: 30px; 
-            border-top: 1px solid #34495e; 
-            color: #e74c3c; 
+        .sidebar-menu .logout {
+            margin-top: 30px;
+            border-top: 1px solid #34495e;
+            color: #e74c3c;
         }
 
-        .sidebar-menu .logout:hover { background-color: var(--primary-red); color: white; }
-
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-        .topbar { 
-            height: 70px; 
-            background-color: white; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 40px; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05); 
-            z-index: 10; 
+        .sidebar-menu .logout:hover {
+            background-color: var(--primary-red);
+            color: white;
         }
 
-        .user-info { font-weight: 600; color: var(--text-dark); font-size: 16px; }
-
-        .content { padding: 40px; overflow-y: auto; flex: 1; }
-
-        .page-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 30px; 
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .page-header h2 { color: var(--text-dark); font-weight: 700; }
+        .topbar {
+            height: 70px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
 
-        .btn-tambah { 
-            background: var(--primary-red); 
-            color: white; 
-            padding: 12px 24px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: 600; 
+        .user-info {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 16px;
+        }
+
+        .content {
+            padding: 40px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .btn-tambah {
+            background: var(--primary-red);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
             font-size: 14px;
-            transition: 0.3s; 
-            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2); 
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
         }
 
-        .btn-tambah:hover { background: var(--dark-red); transform: translateY(-2px); }
-
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
-            gap: 25px; 
-            margin-bottom: 40px; 
+        .btn-tambah:hover {
+            background: var(--dark-red);
+            transform: translateY(-2px);
         }
 
-        .stat-card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
-            border-left: 6px solid var(--primary-red);
-        }
-
-        .stat-card.orange { border-left-color: #f39c12; }
-        .stat-card.green { border-left-color: #27ae60; }
-
-        .stat-card h3 { font-size: 13px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .stat-card .value { font-size: 28px; font-weight: 800; color: var(--text-dark); }
-
-        .table-container { 
-            background: white; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 25px rgba(0,0,0,0.04); 
-            overflow: hidden; 
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
             margin-bottom: 40px;
         }
 
-        .table-header-title { 
-            padding: 20px 30px; 
-            border-bottom: 1px solid #f1f2f6; 
-            font-weight: 700; 
-            color: var(--text-dark); 
-            font-size: 18px; 
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border-left: 6px solid var(--primary-red);
         }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: #fcfdfe; color: #95a5a6; padding: 18px 30px; text-transform: uppercase; font-size: 12px; text-align: left; }
-        td { padding: 18px 30px; border-bottom: 1px solid #f1f2f6; font-size: 14px; color: #444; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background-color: #fafbfc; }
+        .stat-card.orange {
+            border-left-color: #f39c12;
+        }
 
-        .badge { padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; }
-        
-        .status-waiting { background: #fff9e6; color: #f39c12; }
-        .status-approved { background: #eef9f1; color: #27ae60; }
-        .status-rejected { background: #fdf2f2; color: #e74c3c; }
+        .stat-card.green {
+            border-left-color: #27ae60;
+        }
 
-        .prop-tersedia { background: #eef9f1; color: #27ae60; }
-        .prop-tidak { background: #fdf2f2; color: #e74c3c; }
+        .stat-card h3 {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
 
-        .action-links a { 
-            text-decoration: none; 
-            padding: 8px 16px; 
-            border-radius: 6px; 
-            font-size: 12px; 
-            font-weight: 700; 
-            margin-right: 5px; 
-            color: white; 
-            display: inline-block; 
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.04);
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .table-header-title {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f1f2f6;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #fcfdfe;
+            color: #95a5a6;
+            padding: 18px 30px;
+            text-transform: uppercase;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 18px 30px;
+            border-bottom: 1px solid #f1f2f6;
+            font-size: 14px;
+            color: #444;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #fafbfc;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .status-waiting {
+            background: #fff9e6;
+            color: #f39c12;
+        }
+
+        .status-approved {
+            background: #eef9f1;
+            color: #27ae60;
+        }
+
+        .status-rejected {
+            background: #fdf2f2;
+            color: #e74c3c;
+        }
+
+        .status-payment {
+            background: #e3f2fd;
+            color: #2980b9;
+        }
+
+        .prop-tersedia {
+            background: #eef9f1;
+            color: #27ae60;
+        }
+
+        .prop-tidak {
+            background: #fdf2f2;
+            color: #e74c3c;
+        }
+
+        .action-links a {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 5px;
+            color: white;
+            display: inline-block;
             transition: 0.2s;
         }
 
-        .btn-edit { background: #f1c40f; color: #333 !important; }
-        .btn-hapus { background: #e74c3c; }
-        .btn-terima { background: #2ecc71; }
-        .action-links a:hover { opacity: 0.8; transform: scale(1.05); }
+        .btn-edit {
+            background: #f1c40f;
+            color: #333 !important;
+        }
 
-        .kosong { text-align: center; padding: 50px; color: #bdc3c7; font-style: italic; }
+        .btn-hapus {
+            background: #e74c3c;
+        }
+
+        .btn-terima {
+            background: #2ecc71;
+        }
+
+        .btn-cek {
+            background: #3498db;
+        }
+
+        .action-links a:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .kosong {
+            text-align: center;
+            padding: 50px;
+            color: #bdc3c7;
+            font-style: italic;
+        }
+
+         .status-lunas {
+            background-color: #28a745; 
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
     </style>
 </head>
 <body>
@@ -271,8 +398,13 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $query_masuk = "SELECT transaksi.*, users.nama as nama_penyewa, properti.nama_properti 
+                    <?php
+                        $query_masuk = "SELECT 
+                                            transaksi.id AS id_trx, 
+                                            transaksi.tanggal_sewa, 
+                                            transaksi.status AS status_trx, 
+                                            users.nama AS nama_penyewa, 
+                                            properti.nama_properti 
                                         FROM transaksi 
                                         JOIN users ON transaksi.tenant_id = users.id 
                                         JOIN properti ON transaksi.properti_id = properti.id 
@@ -283,27 +415,49 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                         if(mysqli_num_rows($res_masuk) == 0) {
                             echo "<tr><td colspan='5' class='kosong'>Tidak ada aktivitas pesanan baru.</td></tr>";
                         } else {
-                            while($row_m = mysqli_fetch_assoc($res_masuk)) {
-                                $tgl = date('d M Y', strtotime($row_m['tanggal_sewa']));
-                                $status_class = ($row_m['status'] == 'Menunggu Konfirmasi') ? 'status-waiting' : 
-                                                (($row_m['status'] == 'Disetujui') ? 'status-approved' : 'status-rejected');
-                                echo "<tr>
-                                        <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
-                                        <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
-                                        <td>{$tgl}</td>
-                                        <td><span class='badge {$status_class}'>{$row_m['status']}</span></td>
-                                        <td class='action-links' style='text-align: center;'>";
-                                
-                                if($row_m['status'] == 'Menunggu Konfirmasi') {
-                                    echo "<a href='update_status.php?id={$row_m['id']}&status=Disetujui' class='btn-terima'>Terima</a>";
-                                    echo "<a href='update_status.php?id={$row_m['id']}&status=Ditolak' class='btn-hapus'>Tolak</a>";
-                                } else {
-                                    echo "<span style='color: #bdc3c7; font-size: 11px;'>Tindakan Selesai</span>";
-                                }
-                                echo "</td></tr>";
-                            }
+                           while($row_m = mysqli_fetch_assoc($res_masuk)) {
+    $tgl = date('d M Y', strtotime($row_m['tanggal_sewa']));
+    $status_asli = isset($row_m['status_trx']) ? trim($row_m['status_trx']) : 'Menunggu Konfirmasi';
+    $status_lower = strtolower($status_asli);
+    $status_class = '';
+
+    // 1. Tentukan class badge
+    if (strpos($status_lower, 'lunas') !== false) {
+        $status_class = 'status-lunas';
+    } elseif (strpos($status_lower, 'bayar') !== false || strpos($status_lower, 'validasi') !== false) {
+        $status_class = 'status-payment';
+    } elseif (strpos($status_lower, 'setuju') !== false) {
+        $status_class = 'status-approved';
+    } elseif (strpos($status_lower, 'tolak') !== false) {
+        $status_class = 'status-rejected';
+    } else {
+        $status_class = 'status-waiting';
+    }
+
+    // 2. Tentukan isi tombol (HANYA variabel, jangan di-echo di sini)
+    if ($status_class == 'status-waiting') {
+        $tombol_aksi = "<a href='update_status.php?id={$row_m['id_trx']}&status=Disetujui' class='btn-terima'>Terima</a> " .
+                       "<a href='update_status.php?id={$row_m['id_trx']}&status=Ditolak' class='btn-hapus'>Tolak</a>";
+    } elseif ($status_class == 'status-payment') {
+        $tombol_aksi = "<a href='cek_pembayaran.php?id={$row_m['id_trx']}' class='btn-cek'>Cek Bayar</a>";
+    } elseif ($status_class == 'status-lunas') {
+        $tombol_aksi = "<span style='color: #28a745; font-size: 11px;'>Lunas</span>";
+    } else {
+        $tombol_aksi = "<span style='color: #bdc3c7; font-size: 11px;'>Tindakan Selesai</span>";
+    }
+
+    // 3. Tampilkan baris tabel (Cukup sekali echo)
+    echo "<tr>
+            <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
+            <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
+            <td>{$tgl}</td>
+            <td><span class='badge {$status_class}'>" . htmlspecialchars($status_asli) . "</span></td>
+            <td class='action-links' style='text-align: center;'>{$tombol_aksi}</td>
+          </tr>";
+}
                         }
                         ?>
+    
                     </tbody>
                 </table>
             </div>
@@ -330,10 +484,8 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                             mysqli_data_seek($result, 0); 
                             while($row = mysqli_fetch_assoc($result)) {
                                 $harga_rp = "Rp " . number_format($row['harga'], 0, ',', '.');
-                                
                                 $status_properti = isset($row['status']) ? $row['status'] : 'TERSEDIA';
                                 $badge_prop = ($status_properti == 'TERSEDIA') ? 'prop-tersedia' : 'prop-tidak';
-
                                 $alamat_singkat = !empty($row['alamat']) ? htmlspecialchars(substr($row['alamat'], 0, 35)) . '...' : 'Alamat belum diisi';
 
                                 echo "<tr>

@@ -21,7 +21,7 @@ $result_pesanan = mysqli_query($conn, $query_pesanan);
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Tenant - Sewa Properti</title>
-   <style>
+    <style>
         body { 
             font-family: Arial, sans-serif; 
             background-color: #f4f4f4; 
@@ -116,20 +116,11 @@ $result_pesanan = mysqli_query($conn, $query_pesanan);
             font-weight: bold; 
         }
 
-        .menunggu { 
-            background-color: #fff3cd; 
-            color: #856404; 
-        }
-
-        .disetujui { 
-            background-color: #d4edda; 
-            color: #155724; 
-        }
-
-        .ditolak { 
-            background-color: #f8d7da; 
-            color: #721c24; 
-        }
+        .menunggu { background-color: #fff3cd; color: #856404; }
+        .disetujui { background-color: #d4edda; color: #155724; }
+        .ditolak { background-color: #f8d7da; color: #721c24; }
+        
+        .menunggu-pembayaran { background-color: #cce5ff; color: #004085; }
 
         .kosong { 
             text-align: center; 
@@ -139,6 +130,31 @@ $result_pesanan = mysqli_query($conn, $query_pesanan);
 
         .kosong p { 
             margin-bottom: 20px; 
+        }
+
+        .btn-lihat {
+            color: #d11212; 
+            font-weight: bold; 
+            text-decoration: none;
+        }
+        .btn-lihat:hover {
+            text-decoration: underline;
+        }
+
+        .btn-bayar {
+            background-color: #28a745;
+            color: white !important;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .btn-bayar:hover {
+            background-color: #218838;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -180,23 +196,29 @@ $result_pesanan = mysqli_query($conn, $query_pesanan);
                             </td>
                           </tr>";
                 } else {
-                    $no = 1;
                     while($row = mysqli_fetch_assoc($result_pesanan)) {
                         $status_class = '';
                         if($row['status'] == 'Menunggu Konfirmasi') $status_class = 'menunggu';
                         elseif($row['status'] == 'Disetujui') $status_class = 'disetujui';
                         elseif($row['status'] == 'Ditolak') $status_class = 'ditolak';
+                        elseif($row['status'] == 'Menunggu Konfirmasi Pembayaran') $status_class = 'menunggu-pembayaran'; 
 
                         $tanggal = date('d M Y', strtotime($row['tanggal_sewa']));
+
+                        $tombol_aksi = "";
+                        if ($row['status'] == 'Disetujui') {
+                            $tombol_aksi = "<a href='pembayaran.php?id_sewa={$row['id']}' class='btn-bayar'>Bayar Sekarang</a>";
+                        } else {
+                            $tombol_aksi = "<a href='detail_properti.php?id={$row['properti_id']}' class='btn-lihat'>Lihat Properti</a>";
+                        }
 
                         echo "<tr>
                                 <td>#TRX-00{$row['id']}</td>
                                 <td><strong>{$row['nama_properti']}</strong></td>
                                 <td>{$tanggal}</td>
                                 <td><span class='status-badge {$status_class}'>{$row['status']}</span></td>
-                                <td><a href='detail_properti.php?id={$row['properti_id']}' style='color:#d11212; font-weight:bold; text-decoration:none;'>Lihat Properti</a></td>
+                                <td>{$tombol_aksi}</td>
                               </tr>";
-                        $no++;
                     }
                 }
                 ?>

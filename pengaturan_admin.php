@@ -218,17 +218,19 @@ $user = mysqli_fetch_assoc($result);
         }
     </style>
 </head>
-<body>
-     <aside class="sidebar">
-        <div class="sidebar-header">PANEL ADMIN</div>
-        <div class="sidebar-menu">
-            <a href="dashboard_admin.php">Dashboard</a>
-            <a href="kelola_user.php">Kelola Pengguna</a>
-            <a href="kelola_properti.php">Data Properti</a>
-            <a href="laporan_transaksi.php" class="active">Laporan Transaksi</a>
-            <a href="pengaturan_admin.php">Pengaturan</a>
-            <a href="logout.php" class="logout">Logout</a>
-        </div>
+    <?php
+    $current_page = basename($_SERVER['PHP_SELF']);
+    ?>
+    <aside class="sidebar">
+    <div class="sidebar-header">PANEL ADMIN</div>
+    <div class="sidebar-menu">
+        <a href="dashboard_admin.php" class="<?= ($current_page == 'dashboard_admin.php') ? 'active' : ''; ?>">Dashboard</a>
+        <a href="kelola_user.php" class="<?= ($current_page == 'kelola_user.php') ? 'active' : ''; ?>">Kelola Pengguna</a>
+        <a href="kelola_properti.php" class="<?= ($current_page == 'kelola_properti.php') ? 'active' : ''; ?>">Data Properti</a>
+        <a href="laporan_transaksi.php" class="<?= ($current_page == 'laporan_transaksi.php') ? 'active' : ''; ?>">Laporan Transaksi</a>
+        <a href="pengaturan_admin.php" class="<?= ($current_page == 'pengaturan_admin.php') ? 'active' : ''; ?>">Pengaturan</a>
+        <a href="logout.php" class="logout">Logout</a>
+    </div>
     </aside>
 
     <div class="main-wrapper">
