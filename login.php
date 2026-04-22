@@ -1,3 +1,40 @@
+<?php
+session_start();
+require 'koneksi.php';
+
+if(isset($_POST['login'])) {
+    $email = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = $_POST['password'];
+
+    $cek_user = mysqli_query($conn, "SELECT * FROM users WHERE email = '$email'");
+
+    if(mysqli_num_rows($cek_user) === 1) {
+        $data = mysqli_fetch_assoc($cek_user);
+        
+        if(password_verify($password, $data['password'])) {
+            
+            $_SESSION['login'] = true;
+            $_SESSION['user_id'] = $data['id'];
+            $_SESSION['nama'] = $data['nama'];
+            $_SESSION['role'] = $data['role'];
+
+            if($data['role'] == 'tenant') {
+                 header("Location: katalog_properti.php"); 
+            } elseif($data['role'] == 'owner') {
+                header("Location: dashboard_owner.php");
+            } elseif($data['role'] == 'admin') {
+                header("Location: dashboard_admin.php");
+            }
+            exit;
+        } else {
+            echo "<script>alert('Login Gagal: Password salah!');</script>";
+        }
+    } else {
+        echo "<script>alert('Login Gagal: Email tidak ditemukan!');</script>";
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -107,44 +144,6 @@
     </style>
 </head>
 <body>
-
-    <?php
-    session_start();
-
-    require 'koneksi.php';
-
-    if(isset($_POST['login'])) {
-        $email = mysqli_real_escape_string($conn, $_POST['username']);
-        $password = $_POST['password'];
-
-        $cek_user = mysqli_query($conn, "SELECT * FROM users WHERE email = '$email'");
-
-        if(mysqli_num_rows($cek_user) === 1) {
-            $data = mysqli_fetch_assoc($cek_user);
-            
-            if(password_verify($password, $data['password'])) {
-                
-                $_SESSION['login'] = true;
-                $_SESSION['user_id'] = $data['id'];
-                $_SESSION['nama'] = $data['nama'];
-                $_SESSION['role'] = $data['role'];
-
-                if($data['role'] == 'tenant') {
-                     header("Location: katalog_properti.php"); 
-                } elseif($data['role'] == 'owner') {
-                    header("Location: dashboard_owner.php");
-                } elseif($data['role'] == 'admin') {
-                    header("Location: dashboard_admin.php");
-                }
-                exit;
-            } else {
-                echo "<script>alert('Login Gagal: Password salah!');</script>";
-            }
-        } else {
-            echo "<script>alert('Login Gagal: Email tidak ditemukan!');</script>";
-        }
-    }
-    ?>
 
     <div class="login-wrapper">
         <div class="login-left">

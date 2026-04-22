@@ -1,7 +1,7 @@
 <?php
-$host = "localhost";
+$host = "db";
 $user = "root";
-$pass = ""; 
+$pass = "root";
 $db   = "db_sewa_properti";
 
 $conn = mysqli_connect($host, $user, $pass, $db);

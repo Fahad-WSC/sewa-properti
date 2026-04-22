@@ -63,7 +63,7 @@ $ulasan = mysqli_query($conn, "SELECT u.*, us.nama
 
 $avg = mysqli_query($conn, "SELECT AVG(rating) as rata FROM ulasan WHERE properti_id='$id_properti'");
 $data_avg = mysqli_fetch_assoc($avg);
-$rata = round($data_avg['rata'],1);
+$rata = round($data_avg['rata'] ?? 0, 1);
 ?>
 
 <!DOCTYPE html>

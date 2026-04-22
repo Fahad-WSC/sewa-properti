@@ -12,7 +12,7 @@ $query_user = mysqli_query($conn, "SELECT * FROM users WHERE id = '$user_id'");
 $user = mysqli_fetch_assoc($query_user);
 
 $val_nama = isset($user['nama']) ? $user['nama'] : '';
-$val_user = isset($user['username']) ? $user['username'] : '';
+$val_email = isset($user['email']) ? $user['email'] : ''; 
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -144,7 +144,7 @@ $val_user = isset($user['username']) ? $user['username'] : '';
         }
 
         .btn-save { 
-            background: var(--red); 
+            background: var(--primary-red); 
             color: white; 
             border: none; 
             padding: 14px; 
@@ -184,9 +184,7 @@ $val_user = isset($user['username']) ? $user['username'] : '';
                     </div>
 
                     <div class="form-group">
-                        <label>Username / Email</label>
-                        <input type="text" name="username" value="<?php echo $val_user; ?>">
-                    </div>
+                        <label>Email</label> <input type="email" name="email" value="<?php echo $val_email; ?>"> </div>
 
                     <div class="form-group">
                         <label>Password Baru</label>
