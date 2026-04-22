@@ -13,6 +13,7 @@ if(!isset($_GET['id'])) {
 }
 
 $id_properti = $_GET['id'];
+$user_id = $_SESSION['user_id'];
 
 $query = "SELECT * FROM properti WHERE id = '$id_properti'";
 $result = mysqli_query($conn, $query);
@@ -26,7 +27,45 @@ $properti = mysqli_fetch_assoc($result);
 $harga_rp = "Rp " . number_format($properti['harga'], 0, ',', '.');
 $status_properti = $properti['status'] ?? 'TERSEDIA';
 $is_available = ($status_properti == 'TERSEDIA');
+
+$cek = mysqli_query($conn, "SELECT * FROM transaksi 
+    WHERE tenant_id='$user_id' 
+    AND properti_id='$id_properti' 
+    AND status='Lunas'");
+$sudah_sewa = mysqli_num_rows($cek) > 0;
+
+if(isset($_POST['kirim_ulasan'])) {
+    $rating = $_POST['rating'];
+    $komentar = $_POST['komentar'];
+
+    $cek_ulasan = mysqli_query($conn, "SELECT * FROM ulasan 
+        WHERE properti_id='$id_properti' 
+        AND tenant_id='$user_id'");
+
+    if(mysqli_num_rows($cek_ulasan) > 0){
+        mysqli_query($conn, "UPDATE ulasan 
+            SET rating='$rating', komentar='$komentar' 
+            WHERE properti_id='$id_properti' 
+            AND tenant_id='$user_id'");
+    } else {
+        mysqli_query($conn, "INSERT INTO ulasan(properti_id, tenant_id, rating, komentar) 
+            VALUES('$id_properti','$user_id','$rating','$komentar')");
+    }
+
+    echo "<script>alert('Ulasan berhasil disimpan'); location.href='detail_properti.php?id=$id_properti';</script>";
+}
+
+$ulasan = mysqli_query($conn, "SELECT u.*, us.nama 
+    FROM ulasan u 
+    JOIN users us ON u.tenant_id = us.id 
+    WHERE u.properti_id='$id_properti' 
+    ORDER BY u.id DESC");
+
+$avg = mysqli_query($conn, "SELECT AVG(rating) as rata FROM ulasan WHERE properti_id='$id_properti'");
+$data_avg = mysqli_fetch_assoc($avg);
+$rata = round($data_avg['rata'],1);
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -156,12 +195,6 @@ $is_available = ($status_properti == 'TERSEDIA');
             text-align: center;
         }
 
-        .info-item .icon {
-            font-size: 20px;
-            margin-bottom: 8px;
-            display: block;
-        }
-
         .info-item strong {
             display: block;
             color: var(--text-muted);
@@ -169,110 +202,92 @@ $is_available = ($status_properti == 'TERSEDIA');
             margin-bottom: 5px;
         }
 
-        .info-item span {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--text-main);
-        }
-
         h3 {
-            color: var(--text-main);
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .deskripsi {
-            line-height: 1.6;
-            color: #444;
-            margin-bottom: 40px;
-            white-space: pre-wrap; 
         }
 
         .btn-sewa {
             display: block;
             width: 100%;
-            text-align: center;
             background: var(--btn-sewa);
             color: white;
             padding: 15px;
+            text-align: center;
             text-decoration: none;
             border-radius: 4px;
-            font-weight: bold;
-            font-size: 18px;
-            box-sizing: border-box;
-            border: none;
-            cursor: pointer;
         }
 
-        .btn-sewa:hover {
-            background: var(--btn-sewa-hover);
-        }
-
-        .btn-disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            color: #fff;
-        }
-
-        .btn-disabled:hover {
-            background: #ccc;
-        }
+        .btn-disabled { background: #ccc; }
+        .ulasan-box { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        .rating { color: orange; }
+        textarea, select { width:100%; margin-top:10px; padding:8px; }
+        .btn-ulasan { margin-top:10px; padding:10px; background: var(--primary-red); color:white; border:none; }
+        .item-ulasan { margin-top:15px; border-bottom:1px solid #eee; padding-bottom:10px; }
     </style>
 </head>
 <body>
 
-    <div class="detail-container">
-        <div class="header-nav">
-            <a href="katalog_properti.php" class="btn-kembali">← Kembali ke Katalog</a>
-            <?php if($is_available): ?>
-                <span class="badge-status status-tersedia">Tersedia</span>
-            <?php else: ?>
-                <span class="badge-status status-tidak">Sudah Disewa</span>
-            <?php endif; ?>
-        </div>
-        
-        <div class="image-placeholder">
-            <span>[Area Foto Properti]</span>
-        </div>
+<div class="detail-container">
 
-        <h1><?php echo htmlspecialchars($properti['nama_properti']); ?></h1>
-        
-        <div class="alamat">
-             <?php echo !empty($properti['alamat']) ? htmlspecialchars($properti['alamat']) : 'Alamat belum dilengkapi.'; ?>
-        </div>
-
-        <div class="harga-wrapper">
-            <div class="harga"><?php echo $harga_rp; ?> <span>/ bulan</span></div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-item">
-                <span class="icon"></span>
-                <strong>Tipe Properti</strong>
-                <span><?php echo ucfirst($properti['tipe']); ?></span>
-            </div>
-            <div class="info-item">
-                <span class="icon"></span>
-                <strong>Kamar Tidur</strong>
-                <span><?php echo $properti['kamar']; ?> Kamar</span>
-            </div>
-            <div class="info-item">
-                <span class="icon"></span>
-                <strong>Kamar Mandi</strong>
-                <span><?php echo ucfirst($properti['kamar_mandi']); ?></span>
-            </div>
-        </div>
-
-        <h3>Deskripsi Lengkap</h3>
-        <div class="deskripsi"><?php echo htmlspecialchars($properti['deskripsi']); ?></div>
-
+    <div class="header-nav">
+        <a href="katalog_properti.php" class="btn-kembali">← Kembali ke Katalog</a>
         <?php if($is_available): ?>
-            <a href="proses_sewa.php?id=<?php echo $id_properti; ?>" class="btn-sewa">Sewa Sekarang</a>
+            <span class="badge-status status-tersedia">Tersedia</span>
         <?php else: ?>
-            <button class="btn-sewa btn-disabled" disabled>Properti Tidak Tersedia</button>
+            <span class="badge-status status-tidak">Sudah Disewa</span>
         <?php endif; ?>
     </div>
+    
+    <div class="image-placeholder">[Area Foto Properti]</div>
+
+    <h1><?php echo htmlspecialchars($properti['nama_properti']); ?></h1>
+    
+    <div class="alamat">
+        <?php echo htmlspecialchars($properti['alamat']); ?>
+    </div>
+
+    <div class="harga"><?php echo $harga_rp; ?></div>
+
+    <?php if($is_available): ?>
+        <a href="proses_sewa.php?id=<?php echo $id_properti; ?>" class="btn-sewa">Sewa Sekarang</a>
+    <?php else: ?>
+        <button class="btn-sewa btn-disabled">Tidak Tersedia</button>
+    <?php endif; ?>
+
+    <div class="ulasan-box">
+        <h3>Rating ⭐ <?php echo $rata ?: 0; ?>/5</h3>
+
+        <?php if($sudah_sewa): ?>
+        <form method="POST">
+            <select name="rating" required>
+                <option value="">Pilih Rating</option>
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐</option>
+                <option value="3">⭐⭐⭐</option>
+                <option value="2">⭐⭐</option>
+                <option value="1">⭐</option>
+            </select>
+
+            <textarea name="komentar" placeholder="Tulis ulasan..." required></textarea>
+            <button name="kirim_ulasan" class="btn-ulasan">Kirim</button>
+        </form>
+        <?php else: ?>
+            <p style="color:gray;">Sewa dulu untuk memberi ulasan</p>
+        <?php endif; ?>
+
+        <h3>Ulasan Penyewa</h3>
+
+        <?php while($u = mysqli_fetch_assoc($ulasan)): ?>
+            <div class="item-ulasan">
+                <strong><?php echo htmlspecialchars($u['nama']); ?></strong><br>
+                <span class="rating"><?php echo str_repeat("⭐", $u['rating']); ?></span>
+                <p><?php echo htmlspecialchars($u['komentar']); ?></p>
+            </div>
+        <?php endwhile; ?>
+    </div>
+
+</div>
 
 </body>
 </html>

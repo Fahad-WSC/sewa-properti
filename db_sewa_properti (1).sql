@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 15, 2026 at 11:27 AM
+-- Generation Time: Apr 22, 2026 at 09:10 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -67,8 +67,8 @@ INSERT INTO `properti` (`id`, `owner_id`, `nama_properti`, `alamat`, `tipe`, `ka
 (2, 5, 'Kos Bandungs', NULL, 'kos', 2, 'dalam', 2500000, 'TERSEDIA', 'Full', 'default.png', '2026-04-08 10:34:37'),
 (3, 5, 'Apartemen Dipatiukur', NULL, 'apartemen', 3, 'dalam', 3000000, 'TERSEDIA', 'Lantai 5', 'default.png', '2026-04-08 10:41:43'),
 (4, 5, 'Rumah Dago', NULL, 'rumah', 4, 'dalam', 50000000, 'TERSEDIA', 'Nyaman', 'default.png', '2026-04-08 10:42:22'),
-(5, 12, 'Kos Cibaduyut', 'Jalan cibaduyut 1', 'kos', 1, 'dalam', 1500000, 'TIDAK TERSEDIA', 'nyaman dan enak', 'default.png', '2026-04-15 07:54:35'),
-(6, 12, 'Rumah cimahi', 'Jalan cimahi 1', 'rumah', 4, 'dalam', 2000000, 'TERSEDIA', 'Bagus', 'default.png', '2026-04-15 08:59:24');
+(9, 12, 'apart 1', 'jalan apart', 'apartemen', 2, 'dalam', 134564747, 'TIDAK TERSEDIA', '123', 'default.png', '2026-04-21 04:29:56'),
+(10, 12, 'rumah 1', '123', 'rumah', 2, 'dalam', 123456, 'TIDAK TERSEDIA', '123', 'default.png', '2026-04-22 06:20:33');
 
 -- --------------------------------------------------------
 
@@ -81,18 +81,46 @@ CREATE TABLE `transaksi` (
   `tenant_id` int(11) NOT NULL,
   `properti_id` int(11) NOT NULL,
   `tanggal_sewa` date NOT NULL,
-  `status` enum('Menunggu Konfirmasi','Disetujui','Ditolak') DEFAULT 'Menunggu Konfirmasi'
+  `status` varchar(50) DEFAULT 'Menunggu Konfirmasi',
+  `bukti_bayar` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `transaksi`
 --
 
-INSERT INTO `transaksi` (`id`, `tenant_id`, `properti_id`, `tanggal_sewa`, `status`) VALUES
-(1, 3, 4, '2026-04-08', 'Disetujui'),
-(2, 13, 5, '2026-04-15', 'Disetujui'),
-(3, 13, 4, '2026-04-15', 'Menunggu Konfirmasi'),
-(4, 13, 6, '2026-04-15', 'Ditolak');
+INSERT INTO `transaksi` (`id`, `tenant_id`, `properti_id`, `tanggal_sewa`, `status`, `bukti_bayar`) VALUES
+(1, 3, 4, '2026-04-08', 'Disetujui', NULL),
+(2, 13, 5, '2026-04-15', 'Disetujui', '69e6f1e208a1c-2.png'),
+(3, 13, 4, '2026-04-15', 'Menunggu Konfirmasi', NULL),
+(4, 13, 6, '2026-04-15', 'Ditolak', NULL),
+(5, 13, 7, '2026-04-21', 'Disetujui', '69e6f23c75d5b-5.png'),
+(6, 13, 7, '2026-04-21', 'Disetujui', NULL),
+(7, 13, 8, '2026-04-21', 'Disetujui', '69e6fab0dc272-7.png'),
+(8, 13, 9, '2026-04-21', 'Lunas', '69e6fd6abd4c4-8.png'),
+(9, 13, 10, '2026-04-22', 'Lunas', '69e868e63ec3f-9.png');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ulasan`
+--
+
+CREATE TABLE `ulasan` (
+  `id` int(11) NOT NULL,
+  `properti_id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `rating` int(11) NOT NULL CHECK (`rating` between 1 and 5),
+  `komentar` text NOT NULL,
+  `tanggal_ulasan` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ulasan`
+--
+
+INSERT INTO `ulasan` (`id`, `properti_id`, `tenant_id`, `rating`, `komentar`, `tanggal_ulasan`) VALUES
+(1, 10, 13, 5, 'WOW', '2026-04-22 07:01:39');
 
 -- --------------------------------------------------------
 
@@ -146,6 +174,14 @@ ALTER TABLE `transaksi`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `ulasan`
+--
+ALTER TABLE `ulasan`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `properti_id` (`properti_id`,`tenant_id`),
+  ADD KEY `tenant_id` (`tenant_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -166,13 +202,19 @@ ALTER TABLE `pesanan`
 -- AUTO_INCREMENT for table `properti`
 --
 ALTER TABLE `properti`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `transaksi`
 --
 ALTER TABLE `transaksi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `ulasan`
+--
+ALTER TABLE `ulasan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -189,6 +231,13 @@ ALTER TABLE `users`
 --
 ALTER TABLE `properti`
   ADD CONSTRAINT `properti_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `ulasan`
+--
+ALTER TABLE `ulasan`
+  ADD CONSTRAINT `ulasan_ibfk_1` FOREIGN KEY (`properti_id`) REFERENCES `properti` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `ulasan_ibfk_2` FOREIGN KEY (`tenant_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

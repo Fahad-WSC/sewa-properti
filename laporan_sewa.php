@@ -2,16 +2,23 @@
 session_start();
 require 'koneksi.php';
 
+if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
+    header("Location: login.php");
+    exit;
+}
+
 $owner_id = $_SESSION['user_id'];
+
 $query = "SELECT transaksi.*, users.nama as penyewa, properti.nama_properti 
           FROM transaksi 
           JOIN users ON transaksi.tenant_id = users.id 
           JOIN properti ON transaksi.properti_id = properti.id 
-          WHERE properti.owner_id = '$owner_id' AND transaksi.status = 'Disetujui'
+          WHERE properti.owner_id = '$owner_id' 
+          AND transaksi.status = 'Lunas'
           ORDER BY transaksi.id DESC";
+
 $result = mysqli_query($conn, $query);
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -172,15 +179,23 @@ $result = mysqli_query($conn, $query);
                         </tr>
                     </thead>
                     <tbody>
-                        <?php while($row = mysqli_fetch_assoc($result)): ?>
-                        <tr>
-                            <td><?= date('d M Y', strtotime($row['tanggal_sewa'])); ?></td>
-                            <td><strong><?= $row['penyewa']; ?></strong></td>
-                            <td><?= $row['nama_properti']; ?></td>
-                            <td><span style="color:#27ae60; font-weight:bold">Selesai/Lunas</span></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
+<?php 
+if(mysqli_num_rows($result) == 0){
+    echo "<tr><td colspan='4' style='text-align:center; color:#999;'>Belum ada transaksi selesai</td></tr>";
+} else {
+    while($row = mysqli_fetch_assoc($result)): 
+?>
+    <tr>
+        <td><?= date('d M Y', strtotime($row['tanggal_sewa'])); ?></td>
+        <td><strong><?= htmlspecialchars($row['penyewa']); ?></strong></td>
+        <td><?= htmlspecialchars($row['nama_properti']); ?></td>
+        <td><span style="color:#27ae60; font-weight:bold">Lunas</span></td>
+    </tr>
+<?php 
+    endwhile;
+}
+?>
+</tbody>
                 </table>
             </div>
         </main>

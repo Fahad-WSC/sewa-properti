@@ -8,22 +8,25 @@ if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
 }
 
 $id_trx = $_GET['id'] ?? null;
-$status = $_GET['status'] ?? null;
 
-if($id_trx && $status == 'Lunas') {
-    $update = mysqli_query($conn, "UPDATE transaksi SET status = 'Lunas' WHERE id = '$status'");
-    
-    if($update) {
-        echo "<script>
-                alert('Pembayaran berhasil dikonfirmasi! Transaksi kini berstatus Lunas.');
-                window.location='dashboard_owner.php';
-              </script>";
-    } else {
-        echo "<script>
-                alert('Gagal mengupdate status!');
-                window.location='dashboard_owner.php';
-              </script>";
-    }
+if($id_trx){
+
+    // 1. Ubah status transaksi jadi Lunas
+    mysqli_query($conn, "UPDATE transaksi SET status = 'Lunas' WHERE id = '$id_trx'");
+
+    // 2. Ambil properti_id dari transaksi
+    $ambil = mysqli_query($conn, "SELECT properti_id FROM transaksi WHERE id = '$id_trx'");
+    $data = mysqli_fetch_assoc($ambil);
+    $properti_id = $data['properti_id'];
+
+    // 3. Update status properti jadi TIDAK TERSEDIA
+    mysqli_query($conn, "UPDATE properti SET status = 'TIDAK TERSEDIA' WHERE id = '$properti_id'");
+
+    echo "<script>
+            alert('Pembayaran dikonfirmasi. Properti sekarang tidak tersedia.');
+            window.location='dashboard_owner.php';
+          </script>";
+
 } else {
     header("Location: dashboard_owner.php");
     exit;

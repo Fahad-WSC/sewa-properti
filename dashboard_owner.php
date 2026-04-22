@@ -16,13 +16,15 @@ $total_properti = mysqli_num_rows($result);
 
 $q_sewa = mysqli_query($conn, "SELECT COUNT(*) as total FROM transaksi 
                                JOIN properti ON transaksi.properti_id = properti.id 
-                               WHERE properti.owner_id = '$owner_id' AND transaksi.status = 'Disetujui'");
+                               WHERE properti.owner_id = '$owner_id' 
+                               AND transaksi.status IN ('Disetujui', 'Validasi Bayar', 'Lunas')");
 $data_sewa = mysqli_fetch_assoc($q_sewa);
 $properti_disewa = $data_sewa['total'];
 
 $q_duit = mysqli_query($conn, "SELECT SUM(properti.harga) as total FROM transaksi 
                                JOIN properti ON transaksi.properti_id = properti.id 
-                               WHERE properti.owner_id = '$owner_id' AND transaksi.status = 'Disetujui'");
+                               WHERE properti.owner_id = '$owner_id' 
+                               AND transaksi.status IN ('Disetujui', 'Validasi Bayar', 'Lunas')");
 $data_duit = mysqli_fetch_assoc($q_duit);
 $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '.');
 ?>
@@ -398,65 +400,68 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                         </tr>
                     </thead>
                     <tbody>
-                    <?php
-                        $query_masuk = "SELECT 
-                                            transaksi.id AS id_trx, 
-                                            transaksi.tanggal_sewa, 
-                                            transaksi.status AS status_trx, 
-                                            users.nama AS nama_penyewa, 
-                                            properti.nama_properti 
-                                        FROM transaksi 
-                                        JOIN users ON transaksi.tenant_id = users.id 
-                                        JOIN properti ON transaksi.properti_id = properti.id 
-                                        WHERE properti.owner_id = '$owner_id'
-                                        ORDER BY transaksi.id DESC LIMIT 5";
-                        $res_masuk = mysqli_query($conn, $query_masuk);
+                  <?php
+                    $query_masuk = "SELECT 
+                    transaksi.id AS id_trx, 
+                    transaksi.tanggal_sewa, 
+                    transaksi.status AS status_trx, 
+                    transaksi.bukti_bayar, 
+                    users.nama AS nama_penyewa, 
+                    properti.nama_properti 
+                    FROM transaksi 
+                    JOIN users ON transaksi.tenant_id = users.id 
+                    JOIN properti ON transaksi.properti_id = properti.id 
+                    WHERE properti.owner_id = '$owner_id'
+                    ORDER BY transaksi.id DESC LIMIT 5";
+                    $res_masuk = mysqli_query($conn, $query_masuk);
 
-                        if(mysqli_num_rows($res_masuk) == 0) {
-                            echo "<tr><td colspan='5' class='kosong'>Tidak ada aktivitas pesanan baru.</td></tr>";
-                        } else {
-                           while($row_m = mysqli_fetch_assoc($res_masuk)) {
-    $tgl = date('d M Y', strtotime($row_m['tanggal_sewa']));
-    $status_asli = isset($row_m['status_trx']) ? trim($row_m['status_trx']) : 'Menunggu Konfirmasi';
-    $status_lower = strtolower($status_asli);
-    $status_class = '';
+if(mysqli_num_rows($res_masuk) == 0) {
+    echo "<tr><td colspan='5' class='kosong'>Tidak ada aktivitas pesanan baru.</td></tr>";
+} else {
+    while($row_m = mysqli_fetch_assoc($res_masuk)) {
+        $tgl = date('d M Y', strtotime($row_m['tanggal_sewa']));
+        $status_asli = isset($row_m['status_trx']) ? trim($row_m['status_trx']) : 'Menunggu Konfirmasi';
+        $status_lower = strtolower($status_asli);
+        $status_class = '';
 
-    // 1. Tentukan class badge
-    if (strpos($status_lower, 'lunas') !== false) {
-        $status_class = 'status-lunas';
-    } elseif (strpos($status_lower, 'bayar') !== false || strpos($status_lower, 'validasi') !== false) {
-        $status_class = 'status-payment';
-    } elseif (strpos($status_lower, 'setuju') !== false) {
-        $status_class = 'status-approved';
-    } elseif (strpos($status_lower, 'tolak') !== false) {
-        $status_class = 'status-rejected';
-    } else {
-        $status_class = 'status-waiting';
+        if (strpos($status_lower, 'lunas') !== false) {
+            $status_class = 'status-lunas';
+        } elseif (strpos($status_lower, 'bayar') !== false || strpos($status_lower, 'validasi') !== false) {
+            $status_class = 'status-payment';
+        } elseif (strpos($status_lower, 'setuju') !== false) {
+            $status_class = 'status-approved';
+        } elseif (strpos($status_lower, 'tolak') !== false) {
+            $status_class = 'status-rejected';
+        } else {
+            $status_class = 'status-waiting';
+        }
+
+        if (!empty($row_m['bukti_bayar']) && $status_class == 'status-approved') {
+            $status_class = 'status-payment';
+            $status_asli = 'Validasi Bayar';
+        }
+
+        if ($status_class == 'status-waiting') {
+            $tombol_aksi = "<a href='update_status.php?id={$row_m['id_trx']}&status=Disetujui' class='btn-terima'>Terima</a> " .
+                           "<a href='update_status.php?id={$row_m['id_trx']}&status=Ditolak' class='btn-hapus'>Tolak</a>";
+        } elseif ($status_class == 'status-payment') {
+            $tombol_aksi = "<a href='cek_pembayaran.php?id={$row_m['id_trx']}' class='btn-cek'>Cek Bayar</a>";
+        } elseif ($status_class == 'status-lunas') {
+            $tombol_aksi = "<span style='color: #28a745; font-size: 11px; font-weight: bold;'>Lunas</span>";
+        } else {
+            $tombol_aksi = "<span style='color: #bdc3c7; font-size: 11px;'>Tindakan Selesai</span>";
+        }
+
+        echo "<tr>
+                <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
+                <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
+                <td>{$tgl}</td>
+                <td><span class='badge {$status_class}'>" . htmlspecialchars($status_asli) . "</span></td>
+                <td class='action-links' style='text-align: center;'>{$tombol_aksi}</td>
+              </tr>";
     }
-
-    // 2. Tentukan isi tombol (HANYA variabel, jangan di-echo di sini)
-    if ($status_class == 'status-waiting') {
-        $tombol_aksi = "<a href='update_status.php?id={$row_m['id_trx']}&status=Disetujui' class='btn-terima'>Terima</a> " .
-                       "<a href='update_status.php?id={$row_m['id_trx']}&status=Ditolak' class='btn-hapus'>Tolak</a>";
-    } elseif ($status_class == 'status-payment') {
-        $tombol_aksi = "<a href='cek_pembayaran.php?id={$row_m['id_trx']}' class='btn-cek'>Cek Bayar</a>";
-    } elseif ($status_class == 'status-lunas') {
-        $tombol_aksi = "<span style='color: #28a745; font-size: 11px;'>Lunas</span>";
-    } else {
-        $tombol_aksi = "<span style='color: #bdc3c7; font-size: 11px;'>Tindakan Selesai</span>";
-    }
-
-    // 3. Tampilkan baris tabel (Cukup sekali echo)
-    echo "<tr>
-            <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
-            <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
-            <td>{$tgl}</td>
-            <td><span class='badge {$status_class}'>" . htmlspecialchars($status_asli) . "</span></td>
-            <td class='action-links' style='text-align: center;'>{$tombol_aksi}</td>
-          </tr>";
 }
-                        }
-                        ?>
+?>
     
                     </tbody>
                 </table>

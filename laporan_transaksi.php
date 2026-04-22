@@ -7,48 +7,47 @@ if(!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
     exit;
 }
 
-$query = "SELECT p.*, pr.nama_properti, pr.harga 
-          FROM pesanan p 
-          JOIN properti pr ON p.properti_id = pr.id 
-          ORDER BY p.tanggal_pesan DESC";
+$query = "SELECT 
+            transaksi.*, 
+            users.nama AS penyewa, 
+            properti.nama_properti,
+            properti.harga
+          FROM transaksi
+          JOIN users ON transaksi.tenant_id = users.id
+          JOIN properti ON transaksi.properti_id = properti.id
+          ORDER BY transaksi.id DESC";
 
-try {
-    $result = mysqli_query($conn, $query); 
-} catch (mysqli_sql_exception $e) {
-    $result = false; 
-}
+$result = mysqli_query($conn, $query);
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Transaksi - Admin</title>
-    <style>
-    :root {
-            --primary-red: #e74c3c;
-            --dark-red: #c0392b;
-            --sidebar-bg: #2c3e50;
-            --light-bg: #f4f7f6;
-            --text-dark: #2c3e50;
-        }
+<meta charset="UTF-8">
+<title>Laporan Transaksi - Admin</title>
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-        }
+<style>
+:root {
+    --primary-red: #e74c3c;
+    --dark-red: #c0392b;
+    --sidebar-bg: #2c3e50;
+    --light-bg: #f4f7f6;
+}
 
-        body { 
-            background-color: var(--light-bg); 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
 
-        .sidebar { 
+body {
+    background: var(--light-bg);
+    display: flex;
+    height: 100vh;
+}
+
+ .sidebar { 
             width: 260px; 
             background-color: var(--sidebar-bg); 
             color: white; 
@@ -103,168 +102,145 @@ try {
             background-color: var(--primary-red); 
             color: white; 
         }
-        
-        .main-wrapper { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-        }
 
-        .topbar { 
-            height: 70px; 
-            background-color: white; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 40px; 
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05); 
-            font-weight: bold;
-            font-size: 18px;
-            color: #333;
-        }
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
 
-        .content { 
-            padding: 40px; 
-            overflow-y: auto; 
-            flex: 1; 
-        }
-        
-        .table-container { 
-            background: white; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 25px rgba(0,0,0,0.04); 
-            overflow: hidden; 
-        }
+.topbar {
+    height: 70px;
+    background: white;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    font-weight: bold;
+}
 
-        .table-header-title { 
-            padding: 20px 30px; 
-            border-bottom: 1px solid #f1f2f6; 
-            font-weight: 700; 
-            color: #333; 
-            font-size: 18px; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+.content {
+    padding: 30px;
+    overflow-y: auto;
+}
 
-        .btn-cetak {
-            padding: 10px 20px; 
-            background: var(--primary-red); 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer;
-            font-weight: bold;
-        }
+.table-container {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
 
-        .btn-cetak:hover {
-            background: var(--dark-red);
-        }
+.table-header-title {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+}
 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        }
+.btn-cetak {
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
 
-        th { 
-            background-color: #fcfdfe; 
-            color: #777; 
-            padding: 18px 30px; 
-            text-transform: uppercase; 
-            font-size: 12px; 
-            text-align: left; 
-        }
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        td { 
-            padding: 18px 30px; 
-            border-bottom: 1px solid #f1f2f6; 
-            font-size: 14px; 
-            color: #444;
-        }
-        
-        .badge { 
-            padding: 5px 10px; 
-            border-radius: 20px; 
-            font-weight: 700; 
-            font-size: 11px; 
-        }
+th, td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
 
-        .status-berhasil { background: #eef9f1; color: #27ae60; }
-        .status-pending { background: #fff8e1; color: #f39c12; }
-        .status-batal { background: #fdf2f2; color: #e74c3c; }
+.badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+}
 
-        .kosong { 
-            text-align: center; 
-            padding: 50px; 
-            color: #888; 
-            font-style: italic; 
-        }
-    </style>
+.status-berhasil { background:#d4edda; color:#155724; }
+.status-pending { background:#fff3cd; color:#856404; }
+.status-batal { background:#f8d7da; color:#721c24; }
+
+.kosong {
+    text-align:center;
+    padding:40px;
+    color:#888;
+}
+</style>
 </head>
-<body>
-    <aside class="sidebar">
-        <div class="sidebar-header">PANEL ADMIN</div>
-        <div class="sidebar-menu">
-            <a href="dashboard_admin.php">Dashboard</a>
-            <a href="kelola_user.php">Kelola Pengguna</a>
-            <a href="kelola_properti.php">Data Properti</a>
-            <a href="laporan_transaksi.php" class="active">Laporan Transaksi</a>
-            <a href="pengaturan_admin.php">Pengaturan</a>
-            <a href="logout.php" class="logout">Logout</a>
-        </div>
-    </aside>
 
-    <div class="main-wrapper">
-        <header class="topbar">
-            Laporan Transaksi Keseluruhan
-        </header>
-        <main class="content">
-            <div class="table-container">
-                <div class="table-header-title">
-                    <span>Semua Riwayat Transaksi Sewa</span>
-                    <button class="btn-cetak" onclick="window.print()">Cetak Laporan</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Tanggal</th>
-                            <th>Properti</th>
-                            <th>Penyewa</th>
-                            <th>Total Nominal</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        if(!$result || mysqli_num_rows($result) == 0): 
-                        ?>
-                            <tr><td colspan="6" class="kosong">Belum ada data transaksi di sistem.</td></tr>
-                        <?php 
-                        else:
-                            $no=1; 
-                            while($row = mysqli_fetch_assoc($result)): 
-                                $status = $row['status'] ?? 'pending';
-                                $badge_class = 'status-pending';
-                                if(strtolower($status) == 'berhasil' || strtolower($status) == 'lunas') $badge_class = 'status-berhasil';
-                                if(strtolower($status) == 'batal') $badge_class = 'status-batal';
-                        ?>
-                        <tr>
-                            <td><?= $no++; ?></td>
-                            <td><?= date('d M Y', strtotime($row['tanggal_pesan'])); ?></td>
-                            <td><strong><?= htmlspecialchars($row['nama_properti']); ?></strong></td>
-                            <td><?= htmlspecialchars($row['nama_penyewa'] ?? 'Tenant'); ?></td>
-                            <td style="color:#d11212; font-weight:bold">Rp <?= number_format($row['total_harga'] ?? $row['harga'],0,',','.'); ?></td>
-                            <td><span class="badge <?= $badge_class; ?>"><?= strtoupper($status); ?></span></td>
-                        </tr>
-                        <?php 
-                            endwhile; 
-                        endif; 
-                        ?>
-                    </tbody>
-                </table>
-            </div>
-        </main>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">PANEL ADMIN</div>
+    <div class="sidebar-menu">
+        <a href="dashboard_admin.php">Dashboard</a>
+        <a href="kelola_user.php">Kelola Pengguna</a>
+        <a href="kelola_properti.php">Data Properti</a>
+        <a href="laporan_transaksi.php" class="active">Laporan Transaksi</a>
+        <a href="pengaturan_admin.php">Pengaturan</a>
+        <a href="logout.php" class="logout">Logout</a>
     </div>
+</div>
+
+<div class="main-wrapper">
+    <div class="topbar">Laporan Transaksi</div>
+
+    <div class="content">
+        <div class="table-container">
+            <div class="table-header-title">
+                <span>Semua Transaksi</span>
+                <button class="btn-cetak" onclick="window.print()">Cetak</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Properti</th>
+                        <th>Penyewa</th>
+                        <th>Harga</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                <?php
+                if(!$result || mysqli_num_rows($result) == 0){
+                    echo "<tr><td colspan='6' class='kosong'>Belum ada transaksi</td></tr>";
+                } else {
+                    $no = 1;
+                    while($row = mysqli_fetch_assoc($result)){
+
+                        $status = strtolower(trim($row['status']));
+                        $badge = 'status-pending';
+
+                        if(strpos($status,'lunas') !== false){
+                            $badge = 'status-berhasil';
+                        } elseif(strpos($status,'tolak') !== false){
+                            $badge = 'status-batal';
+                        }
+
+                        echo "<tr>
+                                <td>".$no++."</td>
+                                <td>".date('d M Y', strtotime($row['tanggal_sewa']))."</td>
+                                <td>".htmlspecialchars($row['nama_properti'])."</td>
+                                <td>".htmlspecialchars($row['penyewa'])."</td>
+                                <td>Rp ".number_format($row['harga'],0,',','.')."</td>
+                                <td><span class='badge $badge'>".strtoupper($row['status'])."</span></td>
+                              </tr>";
+                    }
+                }
+                ?>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
