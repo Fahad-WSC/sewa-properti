@@ -1,7 +1,5 @@
 <?php
-session_start();
 require 'koneksi.php';
-
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'tenant') {
     header("Location: login.php");
     exit;
@@ -137,19 +135,56 @@ $rata = round($data_avg['rata'] ?? 0, 1);
             color: var(--primary-red);
         }
 
-        .image-placeholder {
+        /* --- CSS SLIDER FOTO --- */
+        .slider-container {
+            position: relative;
             width: 100%;
-            height: 350px;
-            background-color: #ddd;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #888;
-            font-size: 20px;
+            height: 400px;
             border-radius: 8px;
+            overflow: hidden;
+            background-color: #eee;
             margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+
+        .slide-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .slide-img.active {
+            display: block;
+        }
+
+        .btn-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            color: var(--text-main);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-nav:hover { 
+            background: white; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+        }
+        
+        .btn-prev { left: 15px; }
+        .btn-next { right: 15px; }
+        /* ----------------------- */
 
         h1 {
             margin-top: 0;
@@ -216,13 +251,19 @@ $rata = round($data_avg['rata'] ?? 0, 1);
             text-align: center;
             text-decoration: none;
             border-radius: 4px;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+        
+        .btn-sewa:hover {
+            background: var(--btn-sewa-hover);
         }
 
-        .btn-disabled { background: #ccc; }
+        .btn-disabled { background: #ccc; cursor: not-allowed; border: none;}
         .ulasan-box { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
         .rating { color: orange; }
-        textarea, select { width:100%; margin-top:10px; padding:8px; }
-        .btn-ulasan { margin-top:10px; padding:10px; background: var(--primary-red); color:white; border:none; }
+        textarea, select { width:100%; margin-top:10px; padding:8px; box-sizing: border-box;}
+        .btn-ulasan { margin-top:10px; padding:10px 20px; background: var(--primary-red); color:white; border:none; border-radius: 4px; cursor: pointer;}
         .item-ulasan { margin-top:15px; border-bottom:1px solid #eee; padding-bottom:10px; }
     </style>
 </head>
@@ -239,7 +280,33 @@ $rata = round($data_avg['rata'] ?? 0, 1);
         <?php endif; ?>
     </div>
     
-    <div class="image-placeholder">[Area Foto Properti]</div>
+    <!-- --- HTML SLIDER FOTO --- -->
+    <?php 
+    // Mengumpulkan foto dari database ke dalam array
+    $daftar_foto = [];
+    if(!empty($properti['foto_utama'])) $daftar_foto[] = $properti['foto_utama'];
+    if(!empty($properti['foto_2'])) $daftar_foto[] = $properti['foto_2'];
+    if(!empty($properti['foto_3'])) $daftar_foto[] = $properti['foto_3'];
+
+    // Jika kosong, tampilkan default
+    if(empty($daftar_foto)) {
+        $daftar_foto[] = "default.jpg"; 
+    }
+    ?>
+
+    <div class="slider-container">
+        <?php foreach($daftar_foto as $index => $foto): 
+            $activeClass = ($index == 0) ? 'active' : '';
+        ?>
+            <img src="uploads/<?= htmlspecialchars($foto) ?>" class="slide-img <?= $activeClass ?>" alt="Foto Properti">
+        <?php endforeach; ?>
+
+        <?php if(count($daftar_foto) > 1): ?>
+            <button class="btn-nav btn-prev" onclick="ubahSlide(-1)">&#10094;</button>
+            <button class="btn-nav btn-next" onclick="ubahSlide(1)">&#10095;</button>
+        <?php endif; ?>
+    </div>
+    <!-- ------------------------ -->
 
     <h1><?php echo htmlspecialchars($properti['nama_properti']); ?></h1>
     
@@ -252,7 +319,7 @@ $rata = round($data_avg['rata'] ?? 0, 1);
     <?php if($is_available): ?>
         <a href="proses_sewa.php?id=<?php echo $id_properti; ?>" class="btn-sewa">Sewa Sekarang</a>
     <?php else: ?>
-        <button class="btn-sewa btn-disabled">Tidak Tersedia</button>
+        <button class="btn-sewa btn-disabled" disabled>Tidak Tersedia</button>
     <?php endif; ?>
 
     <div class="ulasan-box">
@@ -288,6 +355,29 @@ $rata = round($data_avg['rata'] ?? 0, 1);
     </div>
 
 </div>
+
+<!-- --- SCRIPT SLIDER FOTO --- -->
+<script>
+    let slideIndex = 0;
+    const slides = document.querySelectorAll('.slide-img');
+
+    if(slides.length > 0) {
+        function ubahSlide(n) {
+            slides[slideIndex].classList.remove('active');
+            slideIndex += n;
+            
+            if (slideIndex >= slides.length) {
+                slideIndex = 0;
+            }
+            if (slideIndex < 0) {
+                slideIndex = slides.length - 1;
+            }
+            
+            slides[slideIndex].classList.add('active');
+        }
+    }
+</script>
+<!-- -------------------------- -->
 
 </body>
 </html>

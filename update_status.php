@@ -1,7 +1,5 @@
 <?php
-session_start();
 require 'koneksi.php';
-
 // Pastikan yang akses adalah owner
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
     header("Location: login.php");

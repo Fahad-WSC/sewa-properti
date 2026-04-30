@@ -14,27 +14,46 @@ spec:
     spec:
       containers:
       - name: php-app
-        image: fahawsc/sewa-properti:v1
+        image: rafly007/sewa-properti:v1
         ports:
         - containerPort: 80
         env:
         - name: DB_HOST
           value: "mysql-db-service"
         - name: PORT
-          value: "80" 
+          value: "80"
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /var/www/html/uploads
+      volumes:
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: uploads-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: sewa-properti-service
 spec:
+  type: LoadBalancer
+  sessionAffinity: ClientIP
   selector:
     app: sewa-properti
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
 ---
 apiVersion: v1
 kind: Service
@@ -75,6 +94,7 @@ spec:
       containers:
       - name: mysql
         image: mysql:8.0
+        args: ["--default-authentication-plugin=mysql_native_password"]
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: "root"

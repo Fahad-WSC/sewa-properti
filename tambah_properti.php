@@ -1,5 +1,4 @@
 <?php
-session_start();
 require 'koneksi.php';
 
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
@@ -15,17 +14,56 @@ if(isset($_POST['simpan'])) {
     $kamar_mandi = $_POST['kamar_mandi'];
     $harga = $_POST['harga'];
     $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-    
     $alamat = mysqli_real_escape_string($conn, $_POST['alamat']);
     $status = $_POST['status'];
 
+    // Validasi harga agar tidak melebihi batas database (Integer Overflow)
+    if ($harga > 2000000000) {
+        echo "<script>alert('Nominal harga sewa terlalu besar!'); window.history.back();</script>";
+        exit;
+    }
 
-    $query = "INSERT INTO properti (owner_id, nama_properti, tipe, kamar, kamar_mandi, harga, deskripsi, alamat, status) 
-              VALUES ('$owner_id', '$nama', '$tipe', '$kamar', '$kamar_mandi', '$harga', '$deskripsi', '$alamat', '$status')";
+    // Fungsi bantuan untuk mengurus upload foto
+    function uploadFoto($input_name) {
+        if(isset($_FILES[$input_name]) && $_FILES[$input_name]['error'] === UPLOAD_ERR_OK) {
+            $tmp_name = $_FILES[$input_name]['tmp_name'];
+            $file_name = $_FILES[$input_name]['name'];
+            $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+            
+            // Batasi hanya file gambar yang boleh diupload
+            $allowed_ext = ['jpg', 'jpeg', 'png', 'webp'];
+            if(in_array($file_ext, $allowed_ext)) {
+                // Buat nama file unik agar tidak bentrok jika namanya sama
+                $new_file_name = uniqid() . '-' . time() . '.' . $file_ext;
+                $destination = 'uploads/' . $new_file_name;
+                
+                if(move_uploaded_file($tmp_name, $destination)) {
+                    return $new_file_name; // Kembalikan nama file baru untuk disimpan ke DB
+                }
+            }
+        }
+        return ""; // Kembalikan string kosong jika tidak ada upload atau gagal
+    }
+
+    // Proses upload ketiga foto
+    $foto_utama = uploadFoto('foto_utama');
+    $foto_2 = uploadFoto('foto_2');
+    $foto_3 = uploadFoto('foto_3');
+
+    // Pastikan foto utama wajib terisi
+    if(empty($foto_utama)) {
+        echo "<script>alert('Gagal! Foto Utama wajib diisi dan harus berupa gambar (JPG/PNG).'); window.history.back();</script>";
+        exit;
+    }
+
+    // Masukkan data beserta nama file foto ke database
+    // Pastikan tabel properti kamu sudah memiliki kolom foto_utama, foto_2, dan foto_3
+    $query = "INSERT INTO properti (owner_id, nama_properti, tipe, kamar, kamar_mandi, harga, deskripsi, alamat, status, foto_utama, foto_2, foto_3) 
+              VALUES ('$owner_id', '$nama', '$tipe', '$kamar', '$kamar_mandi', '$harga', '$deskripsi', '$alamat', '$status', '$foto_utama', '$foto_2', '$foto_3')";
 
     if(mysqli_query($conn, $query)) {
         echo "<script>
-                alert('Hore! Properti berhasil ditambahkan.');
+                alert('Hore! Properti beserta foto berhasil ditambahkan.');
                 window.location.href = 'dashboard_owner.php';
               </script>";
     } else {
@@ -81,6 +119,11 @@ if(isset($_POST['simpan'])) {
             box-sizing: border-box; 
         }
 
+        .form-group input[type="file"] {
+            padding: 7px;
+            background: #f9f9f9;
+        }
+
         .btn-simpan { 
             background: #d11212; 
             color: white; 
@@ -91,6 +134,7 @@ if(isset($_POST['simpan'])) {
             cursor: pointer; 
             width: 100%; 
             font-size: 16px;
+            margin-top: 10px;
         }
 
         .btn-simpan:hover { 
@@ -108,6 +152,14 @@ if(isset($_POST['simpan'])) {
         .btn-kembali:hover { 
             text-decoration: underline; 
         }
+
+        .upload-section {
+            background: #fff5f5;
+            padding: 15px;
+            border: 1px dashed #d11212;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -116,7 +168,8 @@ if(isset($_POST['simpan'])) {
         <a href="dashboard_owner.php" class="btn-kembali">&larr; Kembali ke Dashboard</a>
         <h2>Tambah Properti Baru</h2>
         
-        <form action="" method="POST">
+        <!-- WAJIB ADA enctype="multipart/form-data" UNTUK UPLOAD FILE -->
+        <form action="" method="POST" enctype="multipart/form-data">
             <div class="form-group">
                 <label>Nama Properti (Contoh: Kos Eksklusif Dago)</label>
                 <input type="text" name="nama_properti" required>
@@ -133,7 +186,7 @@ if(isset($_POST['simpan'])) {
             
             <div class="form-group">
                 <label>Jumlah Kamar Tidur</label>
-                <input type="number" name="kamar" required min="1">
+                <input type="number" name="kamar" required min="1" max="50">
             </div>
             
             <div class="form-group">
@@ -146,7 +199,23 @@ if(isset($_POST['simpan'])) {
             
             <div class="form-group">
                 <label>Harga Sewa (Hanya Angka, contoh: 5000000)</label>
-                <input type="number" name="harga" required min="100000">
+                <input type="number" name="harga" required min="100000" max="2000000000">
+            </div>
+
+            <!-- AREA UPLOAD FOTO -->
+            <div class="upload-section">
+                <div class="form-group">
+                    <label>Foto Utama (Wajib)</label>
+                    <input type="file" name="foto_utama" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label>Foto Tambahan 1 (Opsional)</label>
+                    <input type="file" name="foto_2" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Foto Tambahan 2 (Opsional)</label>
+                    <input type="file" name="foto_3" accept="image/*">
+                </div>
             </div>
 
             <div class="form-group">

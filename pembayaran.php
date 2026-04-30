@@ -1,5 +1,4 @@
 <?php
-session_start();
 require 'koneksi.php';
 
 if (!isset($_SESSION['login']) || $_SESSION['role'] != 'tenant') {
@@ -34,6 +33,8 @@ if (isset($_POST['upload_bukti'])) {
 
     if ($error === 4) {
         echo "<script>alert('Pilih gambar bukti pembayaran terlebih dahulu!');</script>";
+    } else if ($error !== 0) {
+        echo "<script>alert('Upload gagal! Error code: $error');</script>";
     } else {
         $ekstensi_valid = ['jpg', 'jpeg', 'png'];
         $ekstensi_gambar = explode('.', $nama_file);
@@ -45,21 +46,24 @@ if (isset($_POST['upload_bukti'])) {
             echo "<script>alert('Ukuran gambar terlalu besar! (Maks 2MB)');</script>";
         } else {
             $nama_file_baru = uniqid() . '-' . $id_sewa . '.' . $ekstensi_gambar;
-            
-            move_uploaded_file($tmp_name, 'uploads/' . $nama_file_baru);
+            $target_path = '/var/www/html/uploads/' . $nama_file_baru;
 
-            $update = mysqli_query($conn, "UPDATE transaksi SET 
-                               bukti_bayar = '$nama_file_baru', 
-                               status = 'Validasi Bayar' 
-                               WHERE id = '$id_sewa'");
-
-            if ($update) {
-                echo "<script>
-                        alert('Bukti pembayaran berhasil diunggah! Menunggu konfirmasi dari Owner.');
-                        window.location='dashboard_tenant.php';
-                      </script>";
+            if (!move_uploaded_file($tmp_name, $target_path)) {
+                echo "<script>alert('Gagal menyimpan file! Pastikan folder uploads dapat ditulis.');</script>";
             } else {
-                echo "<script>alert('Gagal mengunggah bukti pembayaran!');</script>";
+                $update = mysqli_query($conn, "UPDATE transaksi SET 
+                                   bukti_bayar = '$nama_file_baru', 
+                                   status = 'Validasi Bayar' 
+                                   WHERE id = '$id_sewa'");
+
+                if ($update) {
+                    echo "<script>
+                            alert('Bukti pembayaran berhasil diunggah! Menunggu konfirmasi dari Owner.');
+                            window.location='dashboard_tenant.php';
+                          </script>";
+                } else {
+                    echo "<script>alert('Gagal memperbarui data pembayaran!');</script>";
+                }
             }
         }
     }

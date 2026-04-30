@@ -1,5 +1,4 @@
 <?php
-session_start();
 require 'koneksi.php';
 
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
@@ -26,7 +25,13 @@ $q_duit = mysqli_query($conn, "SELECT SUM(properti.harga) as total FROM transaks
                                WHERE properti.owner_id = '$owner_id' 
                                AND transaksi.status IN ('Disetujui', 'Validasi Bayar', 'Lunas')");
 $data_duit = mysqli_fetch_assoc($q_duit);
-$estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '.');
+$total_pendapatan = $data_duit['total'] ?? 0;
+$potongan_admin   = $total_pendapatan * 0.15;
+$pendapatan_owner = $total_pendapatan * 0.85;
+
+$estimasi_pendapatan = "Rp " . number_format($total_pendapatan, 0, ',', '.');
+$fmt_potongan        = "Rp " . number_format($potongan_admin, 0, ',', '.');
+$fmt_owner           = "Rp " . number_format($pendapatan_owner, 0, ',', '.');
 ?>
 
 <!DOCTYPE html>
@@ -175,7 +180,7 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
@@ -333,14 +338,13 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
             font-style: italic;
         }
 
-         .status-lunas {
-            background-color: #28a745; 
+        .status-lunas {
+            background-color: #28a745;
             color: white;
             padding: 5px 10px;
             border-radius: 4px;
             font-size: 12px;
         }
-
     </style>
 </head>
 <body>
@@ -382,8 +386,16 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                     <div class="value"><?php echo $properti_disewa; ?></div>
                 </div>
                 <div class="stat-card green">
-                    <h3>Estimasi Cuan</h3>
-                    <div class="value"><?php echo $estimasi_pendapatan; ?></div>
+                    <h3>Estimasi Total</h3>
+                    <div class="value" style="font-size:20px;"><?php echo $estimasi_pendapatan; ?></div>
+                </div>
+                <div class="stat-card" style="border-left-color:#e74c3c;">
+                    <h3>Potongan Admin (15%)</h3>
+                    <div class="value" style="font-size:20px; color:#e74c3c;"><?php echo $fmt_potongan; ?></div>
+                </div>
+                <div class="stat-card" style="border-left-color:#2980b9;">
+                    <h3>Pendapatan Owner (85%)</h3>
+                    <div class="value" style="font-size:20px; color:#2980b9;"><?php echo $fmt_owner; ?></div>
                 </div>
             </div>
 
@@ -400,69 +412,68 @@ $estimasi_pendapatan = "Rp " . number_format($data_duit['total'] ?? 0, 0, ',', '
                         </tr>
                     </thead>
                     <tbody>
-                  <?php
+                    <?php
                     $query_masuk = "SELECT 
-                    transaksi.id AS id_trx, 
-                    transaksi.tanggal_sewa, 
-                    transaksi.status AS status_trx, 
-                    transaksi.bukti_bayar, 
-                    users.nama AS nama_penyewa, 
-                    properti.nama_properti 
-                    FROM transaksi 
-                    JOIN users ON transaksi.tenant_id = users.id 
-                    JOIN properti ON transaksi.properti_id = properti.id 
-                    WHERE properti.owner_id = '$owner_id'
-                    ORDER BY transaksi.id DESC LIMIT 5";
+                        transaksi.id AS id_trx, 
+                        transaksi.tanggal_sewa, 
+                        transaksi.status AS status_trx, 
+                        transaksi.bukti_bayar, 
+                        users.nama AS nama_penyewa, 
+                        properti.nama_properti 
+                        FROM transaksi 
+                        JOIN users ON transaksi.tenant_id = users.id 
+                        JOIN properti ON transaksi.properti_id = properti.id 
+                        WHERE properti.owner_id = '$owner_id'
+                        ORDER BY transaksi.id DESC LIMIT 5";
                     $res_masuk = mysqli_query($conn, $query_masuk);
 
-if(mysqli_num_rows($res_masuk) == 0) {
-    echo "<tr><td colspan='5' class='kosong'>Tidak ada aktivitas pesanan baru.</td></tr>";
-} else {
-    while($row_m = mysqli_fetch_assoc($res_masuk)) {
-        $tgl = date('d M Y', strtotime($row_m['tanggal_sewa']));
-        $status_asli = isset($row_m['status_trx']) ? trim($row_m['status_trx']) : 'Menunggu Konfirmasi';
-        $status_lower = strtolower($status_asli);
-        $status_class = '';
+                    if(mysqli_num_rows($res_masuk) == 0) {
+                        echo "<tr><td colspan='5' class='kosong'>Tidak ada aktivitas pesanan baru.</td></tr>";
+                    } else {
+                        while($row_m = mysqli_fetch_assoc($res_masuk)) {
+                            $tgl = date('d M Y', strtotime($row_m['tanggal_sewa']));
+                            $status_asli = isset($row_m['status_trx']) ? trim($row_m['status_trx']) : 'Menunggu Konfirmasi';
+                            $status_lower = strtolower($status_asli);
+                            $status_class = '';
 
-        if (strpos($status_lower, 'lunas') !== false) {
-            $status_class = 'status-lunas';
-        } elseif (strpos($status_lower, 'bayar') !== false || strpos($status_lower, 'validasi') !== false) {
-            $status_class = 'status-payment';
-        } elseif (strpos($status_lower, 'setuju') !== false) {
-            $status_class = 'status-approved';
-        } elseif (strpos($status_lower, 'tolak') !== false) {
-            $status_class = 'status-rejected';
-        } else {
-            $status_class = 'status-waiting';
-        }
+                            if (strpos($status_lower, 'lunas') !== false) {
+                                $status_class = 'status-lunas';
+                            } elseif (strpos($status_lower, 'bayar') !== false || strpos($status_lower, 'validasi') !== false) {
+                                $status_class = 'status-payment';
+                            } elseif (strpos($status_lower, 'setuju') !== false) {
+                                $status_class = 'status-approved';
+                            } elseif (strpos($status_lower, 'tolak') !== false) {
+                                $status_class = 'status-rejected';
+                            } else {
+                                $status_class = 'status-waiting';
+                            }
 
-        if (!empty($row_m['bukti_bayar']) && $status_class == 'status-approved') {
-            $status_class = 'status-payment';
-            $status_asli = 'Validasi Bayar';
-        }
+                            if (!empty($row_m['bukti_bayar']) && $status_class == 'status-approved') {
+                                $status_class = 'status-payment';
+                                $status_asli = 'Validasi Bayar';
+                            }
 
-        if ($status_class == 'status-waiting') {
-            $tombol_aksi = "<a href='update_status.php?id={$row_m['id_trx']}&status=Disetujui' class='btn-terima'>Terima</a> " .
-                           "<a href='update_status.php?id={$row_m['id_trx']}&status=Ditolak' class='btn-hapus'>Tolak</a>";
-        } elseif ($status_class == 'status-payment') {
-            $tombol_aksi = "<a href='cek_pembayaran.php?id={$row_m['id_trx']}' class='btn-cek'>Cek Bayar</a>";
-        } elseif ($status_class == 'status-lunas') {
-            $tombol_aksi = "<span style='color: #28a745; font-size: 11px; font-weight: bold;'>Lunas</span>";
-        } else {
-            $tombol_aksi = "<span style='color: #bdc3c7; font-size: 11px;'>Tindakan Selesai</span>";
-        }
+                            if ($status_class == 'status-waiting') {
+                                $tombol_aksi = "<a href='update_status.php?id={$row_m['id_trx']}&status=Disetujui' class='btn-terima'>Terima</a> " .
+                                               "<a href='update_status.php?id={$row_m['id_trx']}&status=Ditolak' class='btn-hapus'>Tolak</a>";
+                            } elseif ($status_class == 'status-payment') {
+                                $tombol_aksi = "<a href='cek_pembayaran.php?id={$row_m['id_trx']}' class='btn-cek'>Cek Bayar</a>";
+                            } elseif ($status_class == 'status-lunas') {
+                                $tombol_aksi = "<span style='color: #28a745; font-size: 11px; font-weight: bold;'>Lunas</span>";
+                            } else {
+                                $tombol_aksi = "<span style='color: #bdc3c7; font-size: 11px;'>Tindakan Selesai</span>";
+                            }
 
-        echo "<tr>
-                <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
-                <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
-                <td>{$tgl}</td>
-                <td><span class='badge {$status_class}'>" . htmlspecialchars($status_asli) . "</span></td>
-                <td class='action-links' style='text-align: center;'>{$tombol_aksi}</td>
-              </tr>";
-    }
-}
-?>
-    
+                            echo "<tr>
+                                    <td><strong>" . htmlspecialchars($row_m['nama_penyewa']) . "</strong></td>
+                                    <td>" . htmlspecialchars($row_m['nama_properti']) . "</td>
+                                    <td>{$tgl}</td>
+                                    <td><span class='badge {$status_class}'>" . htmlspecialchars($status_asli) . "</span></td>
+                                    <td class='action-links' style='text-align: center;'>{$tombol_aksi}</td>
+                                  </tr>";
+                        }
+                    }
+                    ?>
                     </tbody>
                 </table>
             </div>

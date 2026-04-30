@@ -1,5 +1,4 @@
 <?php
-session_start();
 require 'koneksi.php';
 
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'tenant') {
@@ -351,7 +350,8 @@ $result = mysqli_query($conn, $query_sql);
         <div class="content-area">
             <h2>Rekomendasi Properti</h2>
             
-            <div class="property-grid">
+            <!-- Tambahan ID 'tempat-katalog' di div ini -->
+            <div class="property-grid" id="tempat-katalog">
                 <?php 
                 if(mysqli_num_rows($result) == 0) {
                     echo "<div class='kosong'>Maaf, tidak ada properti yang cocok dengan filter kamu. Coba sesuaikan ulang pencarian.</div>";
@@ -369,9 +369,9 @@ $result = mysqli_query($conn, $query_sql);
                         
                         echo "
                         <div class='property-card'>
-                            <div class='property-image'>
+                            <div class='property-image' style='padding: 0; overflow: hidden;'>
                                 <span class='badge-status {$badge_class}'>{$status_text}</span>
-                                [Foto {$tipe_label}]
+                                <img src='uploads/" . htmlspecialchars($row['foto_utama'] ?? 'default.jpg') . "' alt='Foto Properti' style='width: 100%; height: 100%; object-fit: cover;'>
                             </div>
                             <div class='property-info'>
                                 <h3 class='property-title'>" . htmlspecialchars($row['nama_properti']) . "</h3>
@@ -396,5 +396,31 @@ $result = mysqli_query($conn, $query_sql);
 
     </div>
 
+    <!-- Tambahan Script AJAX di bawah ini -->
+    <script>
+        // Fungsi untuk mengambil data terbaru
+        function fetchKatalogLive() {
+            // Mengambil URL saat ini beserta filternya (misal: ?tipe=rumah)
+            const currentUrl = window.location.href;
+
+            fetch(currentUrl)
+                .then(response => response.text())
+                .then(htmlString => {
+                    // Mengubah string HTML menjadi format DOM yang bisa dibaca JS
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, 'text/html');
+
+                    // Mengambil bagian <div id="tempat-katalog"> dari hasil fetch
+                    const newContent = doc.getElementById('tempat-katalog').innerHTML;
+
+                    // Mengganti isi katalog di layar dengan yang terbaru
+                    document.getElementById('tempat-katalog').innerHTML = newContent;
+                })
+                .catch(error => console.error('Error fetching live data:', error));
+        }
+
+        // Jalankan pengecekan setiap 3 detik (3000 milidetik)
+        setInterval(fetchKatalogLive, 3000);
+    </script>
 </body>
 </html>

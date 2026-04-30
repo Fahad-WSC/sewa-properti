@@ -1,7 +1,5 @@
 <?php
-session_start();
 require 'koneksi.php';
-
 if(isset($_POST['login'])) {
     $email = mysqli_real_escape_string($conn, $_POST['username']);
     $password = $_POST['password'];

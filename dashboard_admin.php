@@ -1,5 +1,4 @@
 <?php
-session_start();
 require 'koneksi.php';
 
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
@@ -20,6 +19,15 @@ $total_properti = $row_properti['total'];
 $query_transaksi = mysqli_query($conn, "SELECT COUNT(*) as total FROM transaksi WHERE status = 'Disetujui'");
 $row_transaksi = mysqli_fetch_assoc($query_transaksi);
 $total_transaksi = $row_transaksi['total'] ?? 0;
+
+$query_pendapatan = mysqli_query($conn, "SELECT SUM(properti.harga) as total FROM transaksi 
+                                        JOIN properti ON transaksi.properti_id = properti.id 
+                                        WHERE transaksi.status IN ('Disetujui', 'Validasi Bayar', 'Lunas')");
+$row_pendapatan = mysqli_fetch_assoc($query_pendapatan);
+$total_semua = $row_pendapatan['total'] ?? 0;
+$pendapatan_admin = $total_semua * 0.15;
+$fmt_total        = "Rp " . number_format($total_semua, 0, ',', '.');
+$fmt_admin        = "Rp " . number_format($pendapatan_admin, 0, ',', '.');
 
 $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC LIMIT 5");
 ?>
@@ -153,7 +161,7 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
 
         .stats-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
             gap: 25px; 
             margin-bottom: 40px; 
         }
@@ -166,13 +174,8 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
             border-left: 6px solid #3498db;
         }
 
-        .stat-card.orange { 
-            border-left-color: #f39c12;
-        }
-        
-        .stat-card.green { 
-            border-left-color: #27ae60;
-        }
+        .stat-card.orange { border-left-color: #f39c12; }
+        .stat-card.green  { border-left-color: #27ae60; }
 
         .stat-card h3 { 
             font-size: 13px; 
@@ -205,10 +208,7 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
             font-size: 18px; 
         }
 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        }
+        table { width: 100%; border-collapse: collapse; }
 
         th { 
             background-color: #fcfdfe; 
@@ -226,13 +226,8 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
             color: #444; 
         }
 
-        tr:last-child td { 
-            border-bottom: none; 
-        }
-
-        tr:hover { 
-            background-color: #fafbfc; 
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #fafbfc; }
 
         .badge { 
             padding: 6px 12px; 
@@ -242,8 +237,8 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
             text-transform: uppercase;
         }
 
-        .role-admin { background: #fdf2f2; color: #e74c3c; }
-        .role-owner { background: #eef9f1; color: #27ae60; }
+        .role-admin  { background: #fdf2f2; color: #e74c3c; }
+        .role-owner  { background: #eef9f1; color: #27ae60; }
         .role-tenant { background: #ebf5fb; color: #2980b9; }
 
         .btn-detail { 
@@ -258,10 +253,7 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
             transition: 0.2s;
         }
 
-        .btn-detail:hover { 
-            opacity: 0.8; 
-            transform: scale(1.05); 
-        }
+        .btn-detail:hover { opacity: 0.8; transform: scale(1.05); }
 
         .kosong { 
             text-align: center; 
@@ -313,6 +305,14 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
                     <h3>Total Transaksi</h3>
                     <div class="value"><?php echo $total_transaksi; ?></div>
                 </div>
+                <div class="stat-card" style="border-left-color:#8e44ad;">
+                    <h3>Total Pendapatan Platform</h3>
+                    <div class="value" style="font-size:20px; color:#8e44ad;"><?php echo $fmt_total; ?></div>
+                </div>
+                <div class="stat-card" style="border-left-color:#e74c3c;">
+                    <h3>Komisi Admin (15%)</h3>
+                    <div class="value" style="font-size:20px; color:#e74c3c;"><?php echo $fmt_admin; ?></div>
+                </div>
             </div>
 
             <div class="table-container">
@@ -333,12 +333,11 @@ $query_recent_users = mysqli_query($conn, "SELECT * FROM users ORDER BY id DESC 
                                 $nama = htmlspecialchars($row['nama']); 
                                 $kontak = '-';
                                 if (isset($row['email']) && !empty($row['email'])) {
-                                 $kontak = htmlspecialchars($row['email']);
+                                    $kontak = htmlspecialchars($row['email']);
                                 } elseif (isset($row['username']) && !empty($row['username'])) {
-                                  $kontak = htmlspecialchars($row['username']);
+                                    $kontak = htmlspecialchars($row['username']);
                                 }
                                 $role = htmlspecialchars($row['role']);
-                                
                                 $role_class = "role-" . strtolower($role);
                                 
                                 echo "<tr>

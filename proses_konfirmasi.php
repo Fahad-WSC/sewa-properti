@@ -1,7 +1,5 @@
 <?php
-session_start();
 require 'koneksi.php';
-
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'owner') {
     header("Location: login.php");
     exit;

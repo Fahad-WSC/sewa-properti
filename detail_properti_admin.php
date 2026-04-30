@@ -1,7 +1,5 @@
 <?php
-session_start();
 require 'koneksi.php';
-
 // Pengecekan khusus Admin
 if(!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
     header("Location: login.php");
